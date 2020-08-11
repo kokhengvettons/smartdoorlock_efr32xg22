@@ -22,6 +22,7 @@ hardware/kit/common/bsp \
 hardware/kit/common/drivers \
 platform/Device/SiliconLabs/EFR32MG22/Source/GCC \
 platform/Device/SiliconLabs/EFR32MG22/Source \
+platform/emdrv/gpiointerrupt/src \
 platform/emdrv/nvm3/src \
 platform/emdrv/sleep/src \
 platform/emlib/src \

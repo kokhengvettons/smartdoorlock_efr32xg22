@@ -109,7 +109,7 @@ errorcode_t InitCpt212b(void)
   // The delay loop must be calibrated at lease once before use.
   UDELAY_Calibrate();
 
-  //Initialise I2C sensor
+  //Initialize I2C sensor
   GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeWiredAnd, 1);
   GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_RESET_PIN, gpioModePushPull, 1);
   Cpt212b_SensorReset();
@@ -127,6 +127,7 @@ errorcode_t InitCpt212b(void)
     UDELAY_Delay(10);
   }
 
+  Cpt212b_SensorEnable(false);
   return err;
 }
 
@@ -152,7 +153,7 @@ errorcode_t Cpt212b_EnterSenseMode(I2C_TypeDef *i2c)
   i2c_write_data[0] = 0x08;
   i2c_write_data[1] = 0x01;
   seq.buf[0].data   = i2c_write_data;
-  seq.buf[0].len    = 1;
+  seq.buf[0].len    = 2;
   /* Select location/length of data to be read */
   seq.buf[1].data = i2c_read_data;
   seq.buf[1].len  = 0;

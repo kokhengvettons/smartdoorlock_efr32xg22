@@ -92,6 +92,10 @@ extern "C" {
 #define CPT212B_I2CSENSOR_RESET_PIN     0x03
 #define CPT212B_I2CSENSOR_CONTROL_PORT  gpioPortC
 
+#define CPT212B_I2CSENSOR_DATA_PORT     gpioPortB
+#define CPT212B_I2CSENSOR_SCL           0x02
+#define CPT212B_I2CSENSOR_SDA           0x03
+
 /*******************************************************************************
  *****************************   PROTOTYPES   **********************************
  ******************************************************************************/

@@ -43,6 +43,8 @@
 /* Device initialization header */
 #include "hal-config.h"
 
+#include"gpiointerrupt.h"
+
 #ifdef FEATURE_BOARD_DETECTED
 #if defined(HAL_CONFIG)
 #include "bsphalconfig.h"
@@ -147,6 +149,34 @@ void temperatureMeasure()
 }
 
 /**
+ * @brief  keypad touch event callback handler
+ */
+void keypadTouchEventHandler_cb(uint8_t pinNum)
+{
+  uint8_t x = 0;
+  if (x == 0)
+    x = 1;
+}
+
+/**
+ * @brief  configure GPIO Interrupt
+ */
+void configureGPIO_Interrupt(void)
+{
+  CMU_ClockEnable(cmuClock_GPIO, true);
+
+  // Configure PC1 as input enabled for keypad
+  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeInputPull, 1);
+ 
+  // configure PC1 as falling edge trigger on GPIO interrupt source 1
+  GPIO_ExtIntConfig(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, 1, false, true, true);
+
+  // Initialize GPIOINT and register a callback
+  GPIOINT_Init();
+  GPIOINT_CallbackRegister(1, keypadTouchEventHandler_cb);
+}
+
+/**
  * @brief  Main function
  */
 int main(void)
@@ -169,6 +199,10 @@ int main(void)
   InitCpt212b();
 
   #endif
+
+  // configure interrupts
+  configureGPIO_Interrupt();
+
   while (1) {
     /* Event pointer for handling events */
     struct gecko_cmd_packet* evt;
