@@ -29,6 +29,7 @@
  ******************************************************************************/
 
 #include <stddef.h>
+#include <string.h>
 #include "cpt212b.h"
 #include "i2cspm.h"
 #include "udelay.h"
@@ -127,7 +128,6 @@ errorcode_t InitCpt212b(void)
     UDELAY_Delay(10);
   }
 
-  Cpt212b_SensorEnable(false);
   return err;
 }
 
@@ -205,6 +205,46 @@ errorcode_t Cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c)
   {
     return bg_err_application_invalid_configuration_profile;
   }
+}
+
+/** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
+/**************************************************************************//**
+ * @brief
+ *  Read keypad events.
+ * @param[in] i2c
+ *   The I2C peripheral to use.
+ * @param[in] uint8_t data[] 
+ *   Return data array
+ * @param[in] length
+ *   The number of return data array length
+ * @return
+ *   Returns number of bytes read/write on success. Otherwise returns error codes 
+ *****************************************************************************/
+errorcode_t Cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length)
+{
+  I2C_TransferSeq_TypeDef    seq;
+  I2C_TransferReturn_TypeDef ret;
+  uint8_t                    i2c_read_data[3];
+
+  seq.addr  = CPT212B_SENSE_MODE_ADDR;
+  seq.flags = I2C_FLAG_READ;
+  /* Select command to issue */
+  seq.buf[0].data = i2c_read_data;
+  seq.buf[0].len  = 3;
+  /* Select location/length of data to be read */
+  seq.buf[1].data = i2c_read_data;
+  seq.buf[1].len  = 0;
+
+  ret = I2CSPM_Transfer(i2c, &seq);
+
+  if (ret != i2cTransferDone) {
+    return((int) ret);
+  }
+
+  // copy I2C data into return data array
+  memcpy(data, i2c_read_data, sizeof(uint8_t)*length);
+
+  return bg_err_success;
 }
 /** @endcond */
 

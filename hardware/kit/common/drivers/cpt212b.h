@@ -60,7 +60,7 @@ extern "C" {
 /** I2C sense mode events type for cpt212b */
 #define CPT212B_SENSE_EVENT_TOUCH       0x00
 #define CPT212B_SENSE_EVENT_RELEASE     0x01
-#define CPT212B_SENSE_EVENT_PROXIMITY   0x02
+#define CPT212B_SENSE_EVENT_PROXIMITY   0x03
 
 /** I2C configuration loading mode for cpt212b */
 #define CPT212B_CONF_MODE_SELECT        0x08
@@ -105,6 +105,7 @@ void Cpt212b_SensorReset(void);
 void Cpt212b_SensorEnable(bool bEnable);
 errorcode_t Cpt212b_EnterSenseMode(I2C_TypeDef *i2c);
 errorcode_t Cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c);
+errorcode_t Cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
 
 #ifdef __cplusplus
 }
