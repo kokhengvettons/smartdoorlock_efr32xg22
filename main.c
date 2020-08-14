@@ -237,7 +237,6 @@ void keypadTouchEventHandler_cb(uint8_t pinNum)
 
   }
 
-
   // clear the interrupt flags
   GPIO_IntClear(GPIO_IntGet());
 }
@@ -282,7 +281,7 @@ int main(void)
   // Initialize the capacitive touch keypad
   InitCpt212b();
 
-  #endif
+  #endif 
 
   // configure interrupts
   configureGPIO_Interrupt();

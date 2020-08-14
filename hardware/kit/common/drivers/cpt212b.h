@@ -96,15 +96,26 @@ extern "C" {
 #define CPT212B_I2CSENSOR_SCL           0x02
 #define CPT212B_I2CSENSOR_SDA           0x03
 
+/** configuration profile mode*/
+#define CPT212B_WRITE_CONF_PAYLOADS     0x08
+#define CPT212B_MAX_WRITE_CONF_LEN      512
+
 /*******************************************************************************
  *****************************   PROTOTYPES   **********************************
  ******************************************************************************/
 
 errorcode_t InitCpt212b(void);
+errorcode_t FlashNewConfigurationProfile(void);
+errorcode_t WriteConfigurationProfile(void);
 void Cpt212b_SensorReset(void);
 void Cpt212b_SensorEnable(bool bEnable);
+void PacketCounterHandler(bool bReset);
 errorcode_t Cpt212b_EnterSenseMode(I2C_TypeDef *i2c);
 errorcode_t Cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c);
+errorcode_t Cpt212b_ConfigurationUnlock(I2C_TypeDef *i2c);
+errorcode_t Cpt212b_ConfigurationErase(I2C_TypeDef *i2c);
+errorcode_t Cpt212b_ConfigurationWrite(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
+errorcode_t Cpt212b_ConfigurationWriteCRC(I2C_TypeDef *i2c, uint8_t crc_1, uint8_t crc_2);
 errorcode_t Cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
 
 #ifdef __cplusplus

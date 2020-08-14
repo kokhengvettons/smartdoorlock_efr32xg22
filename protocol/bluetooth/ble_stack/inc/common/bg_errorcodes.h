@@ -143,6 +143,8 @@ typedef enum bg_error
 	bg_err_application_inactive_timeout                                                   =bg_errspc_application+13,    //Inactive timeout.
 	bg_err_application_mismatched_or_insufficient_security                                =bg_errspc_application+14,    //Mismatched or insufficient security level
 	bg_err_application_invalid_configuration_profile                                      =bg_errspc_application+15,    //Invalid capacitive touch keypad configuration profile
+	bg_err_application_wrong_configuration_profile_length                                 =bg_errspc_application+16,    //Wrong files size on capacitive touch keypad configuration profile
+	bg_err_application_write_configuration_profile_failed                                 =bg_errspc_application+17,    //filed to write configuration profiles to capacitive touch keypad
 	bg_err_att_invalid_handle                                                             =bg_errspc_att+1,             //The attribute handle given was not valid on this server
 	bg_err_att_read_not_permitted                                                         =bg_errspc_att+2,             //The attribute cannot be read
 	bg_err_att_write_not_permitted                                                        =bg_errspc_att+3,             //The attribute cannot be written

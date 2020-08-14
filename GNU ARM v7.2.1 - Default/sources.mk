@@ -25,6 +25,7 @@ platform/Device/SiliconLabs/EFR32MG22/Source \
 platform/emdrv/gpiointerrupt/src \
 platform/emdrv/nvm3/src \
 platform/emdrv/sleep/src \
+platform/emdrv/ustimer/src \
 platform/emlib/src \
 platform/service/sleeptimer/src \
 protocol/bluetooth/lib/EFR32MG22/GCC \
