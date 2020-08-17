@@ -135,12 +135,12 @@ errorcode_t InitCpt212b(void)
     if ((err = Cpt212b_ConfigurationProfileValidation(I2C0)) == bg_err_success)
     {
       Cpt212b_SensorEnable(false);
-      UDELAY_Delay(1000*10);
+      USTIMER_Delay(1000*10);
       Cpt212b_SensorEnable(true);
 
       // enter sensing mode from configuration loading mode
       err = Cpt212b_EnterSenseMode(I2C0);
-      UDELAY_Delay(1000*10);
+      USTIMER_Delay(1000*10);
     }
   }
 
