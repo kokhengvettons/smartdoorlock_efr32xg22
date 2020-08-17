@@ -52,7 +52,7 @@
 /*******************************************************************************
  *******************************   DEFINES   ***********************************
  ******************************************************************************/
-#define FEATURE_FLASH_NEW_CONFIGURATION_PROFILE		1
+#define FEATURE_FLASH_NEW_CONFIGURATION_PROFILE		0
 
 static uint8_t event_packet_counter; 
 
