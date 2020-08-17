@@ -27,7 +27,7 @@
 #endif
 
 #ifndef HAL_SPIDISPLAY_ENABLE
-#define HAL_SPIDISPLAY_ENABLE             (1)
+#define HAL_SPIDISPLAY_ENABLE             (0)
 #endif
 
 #if defined(FEATURE_I2C_SENSOR)
