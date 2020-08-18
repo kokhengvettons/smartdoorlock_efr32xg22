@@ -62,6 +62,10 @@
 #include "tempsens.h"
 #endif
 
+#include "battery.h"
+#include "em_iadc.h"
+#include "bsp.h"
+
 /***********************************************************************************************//**
  * @addtogroup Application
  * @{
@@ -79,6 +83,8 @@ static uint8_t keypadPassword[DOOR_KEY_PW_SIZE];
 static uint8_t doorAccessKey[DOOR_KEY_PW_SIZE];
 static uint8_t passwordCounter = 0;
 static bool doorAccessPass = false;
+
+static volatile double scanResult[NUM_INPUTS];
 
 /* Gecko configuration parameters (see gecko_configuration.h) */
 #ifndef MAX_CONNECTIONS
@@ -241,6 +247,29 @@ void keypadTouchEventHandler_cb(uint8_t pinNum)
   GPIO_IntClear(GPIO_IntGet());
 }
 
+/**************************************************************************//**
+ * @brief  ADC Handler
+ *****************************************************************************/
+void IADC_IRQHandler(void)
+{
+  IADC_Result_t sample;
+
+  // Get ADC results
+  while(IADC_getScanFifoCnt(IADC0))
+  {
+    // Read data from the scan FIFO
+    sample = IADC_pullScanFifoResult(IADC0);
+
+    // Calculate input voltage:
+    //  For single-ended the result range is 0 to +Vref, i.e.,
+    //  for Vref = AVDD = 3.30V, 12 bits represents 3.30V full scale IADC range.
+    scanResult[sample.id] = sample.data * 3.3 / 0xFFF;
+  }
+
+  // Start next IADC conversion
+  IADC_clearInt(IADC0, IADC_IF_SCANFIFODVL); // flags are sticky; must be cleared in software
+}
+
 /**
  * @brief  configure GPIO Interrupt
  */
@@ -288,6 +317,12 @@ int main(void)
 
   // initialize door access
   initDoorAccess();
+
+  // Initialize the IADC
+  initIADC();
+
+  // Start first conversion
+  IADC_command(IADC0, iadcCmdStartScan);
 
   while (1) {
     /* Event pointer for handling events */
