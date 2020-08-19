@@ -18,11 +18,22 @@
 #include "em_iadc.h"
 #include "em_cmu.h"
 
+volatile double scanResult[NUM_INPUTS];
+static bool InitializedIADC = false;
+
+/**************************************************************************//**
+ * @brief  GPIO initialization for battery measurement
+ *****************************************************************************/
+void initGpioIAdc(void)
+{
+  GPIO_PinModeSet(gpioPortC, 0x00, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(gpioPortC, 0x06, gpioModeInputPullFilter, 1);
+}
 
 /**************************************************************************//**
  * @brief  IADC Initializer
  *****************************************************************************/
-void initIADC (void)
+void initIAdc (void)
 {
   // Declare init structs
   IADC_Init_t init = IADC_INIT_DEFAULT;
@@ -102,4 +113,56 @@ void initIADC (void)
   // Enable ADC interrupts
   NVIC_ClearPendingIRQ(IADC_IRQn);
   NVIC_EnableIRQ(IADC_IRQn);
+}
+
+/**************************************************************************//**
+ * @brief Enable the IADC module for battery measurement 
+ *****************************************************************************/
+void enableIAdcBatteryMeasurement(void)
+{
+  // Initialize the GPIO
+  initGpioIAdc();
+
+  // Initialize the IADC
+  initIAdc();
+
+  InitializedIADC = true;
+}
+
+/**************************************************************************//**
+ * @brief trigger IADC for battery measurement 
+ *****************************************************************************/
+void triggerBatteryMeasurement(bool bEnable)
+{
+  // make sure Init IADC before
+  if (InitializedIADC != true)
+    enableIAdcBatteryMeasurement();
+
+  if (bEnable)
+    IADC_command(IADC0, iadcCmdStartScan);
+  else
+    IADC_command(IADC0, iadcCmdStopScan);
+}
+
+/**************************************************************************//**
+ * @brief  IADC Handler
+ *****************************************************************************/
+void IADC_IRQHandler(void)
+{
+  IADC_Result_t sample;
+
+  // Get ADC results
+  while(IADC_getScanFifoCnt(IADC0))
+  {
+    // Read data from the scan FIFO
+    sample = IADC_pullScanFifoResult(IADC0);
+
+    // Calculate input voltage:
+    //  For single-ended the result range is 0 to +Vref, i.e.,
+    //  for Vref = AVDD = 3.30V, 12 bits represents 3.30V full scale IADC range.
+    scanResult[sample.id] = sample.data * 3.3 / 0xFFF;
+  }
+
+  // Start next IADC conversion
+  IADC_clearInt(IADC0, IADC_IF_SCANFIFODVL); // flags are sticky; must be cleared in software
 }

@@ -113,9 +113,6 @@ errorcode_t InitCpt212b(void)
 {
   errorcode_t err = bg_err_success;
 
-  // Initialization of USTIMER driver
-  USTIMER_Init();
-
   //Initialize I2C sensor
   GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeWiredAnd, 1);
   GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_RESET_PIN, gpioModePushPull, 1);

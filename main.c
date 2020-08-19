@@ -63,8 +63,10 @@
 #endif
 
 #include "battery.h"
+#include "motor.h"
 #include "em_iadc.h"
 #include "bsp.h"
+#include "ustimer.h"
 
 /***********************************************************************************************//**
  * @addtogroup Application
@@ -84,7 +86,12 @@ static uint8_t doorAccessKey[DOOR_KEY_PW_SIZE];
 static uint8_t passwordCounter = 0;
 static bool doorAccessPass = false;
 
-static volatile double scanResult[NUM_INPUTS];
+typedef enum {
+  MOTOR_PWM_HANDLE = 1,
+  LED_TIMEOUT_HANDLE,
+  MOTION_TIMEOUT_HANDLE
+} soft_timer_handle_t;
+
 
 /* Gecko configuration parameters (see gecko_configuration.h) */
 #ifndef MAX_CONNECTIONS
@@ -247,29 +254,6 @@ void keypadTouchEventHandler_cb(uint8_t pinNum)
   GPIO_IntClear(GPIO_IntGet());
 }
 
-/**************************************************************************//**
- * @brief  ADC Handler
- *****************************************************************************/
-void IADC_IRQHandler(void)
-{
-  IADC_Result_t sample;
-
-  // Get ADC results
-  while(IADC_getScanFifoCnt(IADC0))
-  {
-    // Read data from the scan FIFO
-    sample = IADC_pullScanFifoResult(IADC0);
-
-    // Calculate input voltage:
-    //  For single-ended the result range is 0 to +Vref, i.e.,
-    //  for Vref = AVDD = 3.30V, 12 bits represents 3.30V full scale IADC range.
-    scanResult[sample.id] = sample.data * 3.3 / 0xFFF;
-  }
-
-  // Start next IADC conversion
-  IADC_clearInt(IADC0, IADC_IF_SCANFIFODVL); // flags are sticky; must be cleared in software
-}
-
 /**
  * @brief  configure GPIO Interrupt
  */
@@ -302,6 +286,8 @@ int main(void)
   initVcomEnable();
   // Initialize stack
   gecko_init(&config);
+  // Initialization of USTIMER driver
+  USTIMER_Init();
 
   #ifdef FEATURE_I2C_SENSOR
   // Initialize the Temperature Sensor
@@ -318,11 +304,11 @@ int main(void)
   // initialize door access
   initDoorAccess();
 
-  // Initialize the IADC
-  initIADC();
+  // trigger IADC battery measurement
+  triggerBatteryMeasurement(true);
 
-  // Start first conversion
-  IADC_command(IADC0, iadcCmdStartScan);
+  // trigger door lock 
+  triggerDoorLock(true);
 
   while (1) {
     /* Event pointer for handling events */
@@ -374,8 +360,18 @@ int main(void)
        * is read after every 1 second and then the indication of that is sent to the listening client. */
       case gecko_evt_hardware_soft_timer_id:
         /* Measure the temperature as defined in the function temperatureMeasure() */
-        temperatureMeasure();
-        break;
+        //temperatureMeasure();
+
+         switch (evt->data.evt_hardware_soft_timer.handle)
+         {
+           case MOTOR_PWM_HANDLE:
+             endDoorLock();
+             break;
+          
+           default:
+             break;
+         }
+         break;
 
       case gecko_evt_le_connection_closed_id:
         /* Check if need to boot to dfu mode */

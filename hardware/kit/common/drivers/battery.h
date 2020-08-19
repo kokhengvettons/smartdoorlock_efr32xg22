@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 
 /*******************************************************************************
  *******************************   DEFINES   ***********************************
@@ -44,8 +45,11 @@ extern "C" {
 #define IADC_INPUT_1_BUS          CDBUSALLOC
 #define IADC_INPUT_1_BUSALLOC     GPIO_CDBUSALLOC_CDODD0_ADC0
 
+void initGpioIAdc(void);
+void initIAdc(void);
+void enableIAdcBatteryMeasurement(void);
+void triggerBatteryMeasurement(bool bEnable);
 
-void initIADC(void);
 
 #ifdef __cplusplus
 }
