@@ -23,7 +23,7 @@
 
 
 // Top level macros
-#define SILABS_AF_DEVICE_NAME "soc-thermometer"
+#define SILABS_AF_DEVICE_NAME "soc-empty"
 
 
 // Generated plugin macros

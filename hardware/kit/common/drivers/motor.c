@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "motor.h"
+#include "app.h"
 #include "em_letimer.h"
 #include "em_gpio.h"
 #include "em_cmu.h"
@@ -30,7 +31,7 @@ static bool InitializedPwm = false;
  *****************************************************************************/
 void initGpioPwm(void)
 {
-  GPIO_PinModeSet(gpioPortA, 0x07, gpioModePushPull, 1);  
+  GPIO_PinModeSet(gpioPortA, 0x07, gpioModePushPull, 1);
 }
 
 /**************************************************************************//**
@@ -100,14 +101,19 @@ void triggerDoorLock(bool bLock)
     enableMotorPwm();
 
   if (bLock)
-  {
+  {    
+    // set soft timer as 350ms (i.e. 11468/32768 ~= 350)
+    gecko_cmd_hardware_set_soft_timer(32768 * MOTOR_PWM_INTERVAL_MS / 1000, 
+                                      SOFT_TIMER_MOTOR_PWM_HANDLER, true);
+
     initLetimer(DUTY_CYCLE_LOCK);
-    gecko_cmd_hardware_set_soft_timer(11468, 1, true);
   }
   else
   {
+    gecko_cmd_hardware_set_soft_timer(32768 * MOTOR_PWM_INTERVAL_MS / 1000, 
+                                      SOFT_TIMER_MOTOR_PWM_HANDLER, true);
+
     initLetimer(DUTY_CYCLE_UNLOCK);
-    gecko_cmd_hardware_set_soft_timer(11468, 1, true);
   }
  };
 

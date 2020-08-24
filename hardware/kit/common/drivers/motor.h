@@ -33,8 +33,10 @@ extern "C" {
 #define OUT_FREQ                50
 
 // Duty cycle percentage
-#define DUTY_CYCLE_LOCK         30
-#define DUTY_CYCLE_UNLOCK       20
+#define DUTY_CYCLE_LOCK         4       // 0.8ms
+#define DUTY_CYCLE_UNLOCK       15      // 3ms
+
+#define MOTOR_PWM_INTERVAL_MS   350     // 350ms
 
 void initLetimer(unsigned int dutyCycle);
 void initClockLetimer(void);
