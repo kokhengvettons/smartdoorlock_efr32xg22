@@ -203,10 +203,7 @@ void openDoor(void)
   resetDoorKeyValue();
 }
 
-/**
- * @brief  keypad touch event callback handler
- */
-void keypadTouchEventHandler_cb(uint8_t pinNum)
+void keypadEventInterruptHandler(uint8_t pinNum)
 {
   uint8_t eventData[3];
   cpt212b_ReadKeypadEvent(I2C0, eventData, 3);
@@ -248,7 +245,7 @@ void keypadTouchEventHandler_cb(uint8_t pinNum)
 /**
  * @brief  door open sensor Interrupt callback handler
  */
-void doorSensorIntHandler_cb(uint8_t pinNum)
+void doorSensorInterruptHandler(uint8_t pinNum)
 {
   gecko_external_signal(EXT_SIGNAL_DOOR_SENSOR_FLAG);
 
@@ -259,7 +256,7 @@ void doorSensorIntHandler_cb(uint8_t pinNum)
 /**
  * @brief  door push button Interrupt callback handler
  */
-void doorOpenButtonIntHandler_cb(uint8_t pinNum)
+void doorOpenButtonInterruptHandler(uint8_t pinNum)
 {
   gecko_external_signal(EXT_SIGNAL_DOOR_BUTTON_FLAG);
 
@@ -281,12 +278,6 @@ void initGpio(void)
   GPIO_PinModeSet(gpioPortC, 2, gpioModeInputPullFilter, 1);
   GPIO_PinModeSet(gpioPortB, 0, gpioModeInputPull, 1);
 
-  // Configure PC01 as input enabled for keypad 
-  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeInputPull, 1);
-
-  // configure PC01 as falling edge trigger on GPIO interrupt source 1 for keypad event
-  GPIO_ExtIntConfig(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, 1, false, true, true);
-
   // configure PC02 as rising & falling edge trigger on GPIO interrupt source 2 for door sensor
   GPIO_ExtIntConfig(gpioPortC, 2, 2, true, true, true);
 
@@ -294,10 +285,10 @@ void initGpio(void)
   GPIO_ExtIntConfig(gpioPortB, 0, 3, false, true, true);
 
   // Initialize GPIOINT and register a callback
-  GPIOINT_Init();  
-  GPIOINT_CallbackRegister(1, keypadTouchEventHandler_cb);
-  GPIOINT_CallbackRegister(2, doorSensorIntHandler_cb);
-  GPIOINT_CallbackRegister(3, doorOpenButtonIntHandler_cb);
+  GPIOINT_Init();
+  GPIOINT_CallbackRegister(1, keypadEventInterruptHandler);
+  GPIOINT_CallbackRegister(2, doorSensorInterruptHandler);
+  GPIOINT_CallbackRegister(3, doorOpenButtonInterruptHandler);
 }
 
 /**
@@ -308,9 +299,6 @@ void initUserApp()
   // Initialize of USTIMER driver
   USTIMER_Init();
 
-  // Initialize GPIO module
-  initGpio();
-
   // Initialize the capacitive touch keypad
   initcpt212b();
 
@@ -319,6 +307,10 @@ void initUserApp()
 
   // initialize door access
   initDoorAccess();
+
+  // Initialize GPIO module
+  initGpio();
+
 }
 
 /**

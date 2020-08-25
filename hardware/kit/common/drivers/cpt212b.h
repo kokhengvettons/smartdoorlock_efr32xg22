@@ -104,6 +104,7 @@ extern "C" {
  *****************************   PROTOTYPES   **********************************
  ******************************************************************************/
 void initGpioI2c(void);
+void initKeypadInterrupt(void);
 void cpt212b_SensorReset(void);
 void cpt212b_SensorEnable(bool bEnable);
 void PacketCounterHandler(bool bReset);

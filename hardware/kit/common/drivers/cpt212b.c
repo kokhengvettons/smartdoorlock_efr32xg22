@@ -59,6 +59,22 @@ void initGpioI2c(void)
 
 /**************************************************************************//**
  * @brief
+ *  Initialize keypad Interrupt from CPT212B Capacitive touch keypad 
+ * @param[in] void
+ * @return
+ *   Return void.
+ *****************************************************************************/
+void initKeypadInterrupt(void)
+{
+  // Configure PC01 as input enabled for keypad 
+  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeInputPull, 1);
+
+  // configure PC01 as falling edge trigger on GPIO interrupt source 1 for keypad event
+  GPIO_ExtIntConfig(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, 1, false, true, true);
+}
+
+/**************************************************************************//**
+ * @brief
  *  Reset I2C sensor (active low) for CPT212B Capacitive touch keypad
  * @param[in] void
  * @return
@@ -127,6 +143,9 @@ errorcode_t initcpt212b(void)
       // enter sensing mode from configuration loading mode
       err = cpt212b_EnterSenseMode(I2C0);
       USTIMER_Delay(1000*10);
+
+      // enable keypad interrupt after enter sensing mode
+      initKeypadInterrupt();
     }
   }
 
