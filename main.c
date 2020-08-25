@@ -209,7 +209,7 @@ void openDoor(void)
 void keypadTouchEventHandler_cb(uint8_t pinNum)
 {
   uint8_t eventData[3];
-  Cpt212b_ReadKeypadEvent(I2C0, eventData, 3);
+  cpt212b_ReadKeypadEvent(I2C0, eventData, 3);
 
   int eventTypeValue = eventData[0] & 0x0F;
   if (eventTypeValue == CPT212B_SENSE_EVENT_TOUCH)
@@ -269,12 +269,10 @@ void doorOpenButtonIntHandler_cb(uint8_t pinNum)
 
 
 /**
- * @brief  configure GPIO Interrupt
+ * @brief  initialize GPIO module
  */
-void configureGPIO(void)
+void initGpio(void)
 {
-  //CMU_ClockEnable(cmuClock_GPIO, true);
-
   // configure PD02 as LED0 and PD03 as LED1
   GPIO_PinModeSet(BSP_LED0_PORT, BSP_LED0_PIN, gpioModePushPull, 0);
   GPIO_PinModeSet(BSP_LED1_PORT, BSP_LED1_PIN, gpioModePushPull, 0);
@@ -283,15 +281,8 @@ void configureGPIO(void)
   GPIO_PinModeSet(gpioPortC, 2, gpioModeInputPullFilter, 1);
   GPIO_PinModeSet(gpioPortB, 0, gpioModeInputPull, 1);
 
-  // configure PA07 as motor PWM
-  GPIO_PinModeSet(gpioPortA, 0x07, gpioModePushPull, 1);
-  GPIO_PinOutClear(gpioPortA, 0x07);
-
   // Configure PC01 as input enabled for keypad 
   GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeInputPull, 1);
- 
-  // configure PB00 as falling edge trigger on GPIO interrupt source 0 for door sensor
-  GPIO_ExtIntConfig(gpioPortB, 0, 0, false, true, true);
 
   // configure PC01 as falling edge trigger on GPIO interrupt source 1 for keypad event
   GPIO_ExtIntConfig(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, 1, false, true, true);
@@ -299,11 +290,35 @@ void configureGPIO(void)
   // configure PC02 as rising & falling edge trigger on GPIO interrupt source 2 for door sensor
   GPIO_ExtIntConfig(gpioPortC, 2, 2, true, true, true);
 
+  // configure PB00 as falling edge trigger on GPIO interrupt source 3 for door sensor
+  GPIO_ExtIntConfig(gpioPortB, 0, 3, false, true, true);
+
   // Initialize GPIOINT and register a callback
-  GPIOINT_Init();
-  GPIOINT_CallbackRegister(0, doorOpenButtonIntHandler_cb);
+  GPIOINT_Init();  
   GPIOINT_CallbackRegister(1, keypadTouchEventHandler_cb);
-  GPIOINT_CallbackRegister(2, doorSensorIntHandler_cb);  
+  GPIOINT_CallbackRegister(2, doorSensorIntHandler_cb);
+  GPIOINT_CallbackRegister(3, doorOpenButtonIntHandler_cb);
+}
+
+/**
+ * @brief  initialize user app settings before run the appMain function
+ */
+void initUserApp()
+{
+  // Initialize of USTIMER driver
+  USTIMER_Init();
+
+  // Initialize GPIO module
+  initGpio();
+
+  // Initialize the capacitive touch keypad
+  initcpt212b();
+
+  // Initialize motor PWM module
+  initMotorPwm();
+
+  // initialize door access
+  initDoorAccess();
 }
 
 /**
@@ -319,27 +334,18 @@ int main(void)
   initApp();
   initVcomEnable();
 
-  // Initialization of USTIMER driver
-  USTIMER_Init();
-
   #ifdef FEATURE_I2C_SENSOR
   // Initialize the Temperature Sensor
   //Si7013_Detect(I2C0, SI7021_ADDR, NULL);
-
-  // Initialize the capacitive touch keypad
-  InitCpt212b();
-
-  #endif 
-
-  // configure GPIO
-  configureGPIO();
-
-  // initialize door access
-  initDoorAccess();
+  #endif
 
   // trigger IADC battery measurement
   //triggerBatteryMeasurement(true);
 
+  // Initialize user application
+  initUserApp();
+
+  // main application 
   appMain(&config);
 }
 

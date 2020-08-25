@@ -24,7 +24,6 @@
 
 #include <stdbool.h>
 
-static bool InitializedPwm = false;
 
 /**************************************************************************//**
  * @brief GPIO initialization for output PWM
@@ -32,6 +31,7 @@ static bool InitializedPwm = false;
 void initGpioPwm(void)
 {
   GPIO_PinModeSet(gpioPortA, 0x07, gpioModePushPull, 1);
+  GPIO_PinOutClear(gpioPortA, 0x07);
 }
 
 /**************************************************************************//**
@@ -81,15 +81,13 @@ void initLetimer(unsigned int dutyCycle)
 }
 
 /**************************************************************************//**
- * @brief enable the Motor PWM module 
+ * @brief Initialize the Motor PWM module 
  *****************************************************************************/
-void enableMotorPwm(void)
+void initMotorPwm(void)
 {
   initGpioPwm();
 
   initClockLetimer();
-
-  InitializedPwm = true;
 }
 
 /**************************************************************************//**
@@ -97,9 +95,6 @@ void enableMotorPwm(void)
  *****************************************************************************/
 void triggerDoorLock(bool bLock)
 {
-  if (InitializedPwm != true)
-    enableMotorPwm();
-
   if (bLock)
   {    
     // set soft timer as 350ms (i.e. 11468/32768 ~= 350)

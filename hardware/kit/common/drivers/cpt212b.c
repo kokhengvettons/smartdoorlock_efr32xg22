@@ -37,32 +37,25 @@
 
 #include "stddef.h"
 
-/***************************************************************************//**
- * @addtogroup kitdrv
- * @{
- ******************************************************************************/
-
-/***************************************************************************//**
- * @addtogroup cpt212B
- * @brief Silicon Labs CPT212B Capacitive touch keypad I2C driver.
- * @details
- * @{
- ******************************************************************************/
-
-/*******************************************************************************
- *******************************   DEFINES   ***********************************
- ******************************************************************************/
 #define FEATURE_FLASH_NEW_CONFIGURATION_PROFILE		0
 
 static uint8_t event_packet_counter; 
 
-/** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
 
-/** @endcond */
-
-/*******************************************************************************
- **************************   GLOBAL FUNCTIONS   *******************************
- ******************************************************************************/
+/**************************************************************************//**
+ * @brief
+ *  Initialize GPIO to enable the CPT212B Capacitive touch keypad 
+ * @param[in] void
+ * @return
+ *   Return void.
+ *****************************************************************************/
+void initGpioI2c(void)
+{
+  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeWiredAnd, 1);
+  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_RESET_PIN, gpioModePushPull, 1);
+  cpt212b_SensorReset();
+  cpt212b_SensorEnable(true);
+}
 
 /**************************************************************************//**
  * @brief
@@ -71,7 +64,7 @@ static uint8_t event_packet_counter;
  * @return
  *   Return void.
  *****************************************************************************/
-void Cpt212b_SensorReset(void)
+void cpt212b_SensorReset(void)
 {
   // enable (active low) to reset
   GPIO_PinOutClear(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_RESET_PIN);
@@ -90,7 +83,7 @@ void Cpt212b_SensorReset(void)
  * @return
  *   Return void.
  *****************************************************************************/
-void Cpt212b_SensorEnable(bool bEnable)
+void cpt212b_SensorEnable(bool bEnable)
 {
   if (bEnable)
   {
@@ -109,34 +102,30 @@ void Cpt212b_SensorEnable(bool bEnable)
  * @return
  *   Return results
  *****************************************************************************/
-errorcode_t InitCpt212b(void)
+errorcode_t initcpt212b(void)
 {
   errorcode_t err = bg_err_success;
 
-  //Initialize I2C sensor
-  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_ENABLE_PIN, gpioModeWiredAnd, 1);
-  GPIO_PinModeSet(CPT212B_I2CSENSOR_CONTROL_PORT, CPT212B_I2CSENSOR_RESET_PIN, gpioModePushPull, 1);
-  Cpt212b_SensorReset();
-  Cpt212b_SensorEnable(true);
+  initGpioI2c();
 
   // packet counter set to 0 as starting send event packet
   event_packet_counter = 0;
 
   #if FEATURE_FLASH_NEW_CONFIGURATION_PROFILE
-    err = FlashNewConfigurationProfile();
+    err = flashNewConfigurationProfile();
   #endif
   
   if (err == bg_err_success)
   {
     // validate configuration profile
-    if ((err = Cpt212b_ConfigurationProfileValidation(I2C0)) == bg_err_success)
+    if ((err = cpt212b_ConfigurationProfileValidation(I2C0)) == bg_err_success)
     {
-      Cpt212b_SensorEnable(false);
+      cpt212b_SensorEnable(false);
       USTIMER_Delay(1000*10);
-      Cpt212b_SensorEnable(true);
+      cpt212b_SensorEnable(true);
 
       // enter sensing mode from configuration loading mode
-      err = Cpt212b_EnterSenseMode(I2C0);
+      err = cpt212b_EnterSenseMode(I2C0);
       USTIMER_Delay(1000*10);
     }
   }
@@ -166,17 +155,17 @@ void PacketCounterHandler(bool bReset)
  * @return
  *   Return results
  *****************************************************************************/
-errorcode_t FlashNewConfigurationProfile(void)
+errorcode_t flashNewConfigurationProfile(void)
 {
   errorcode_t err = bg_err_success;
 
   // step 1: Host sends the configuration loading unlock sequence.
-  if ((err = Cpt212b_ConfigurationUnlock(I2C0)) == bg_err_success)
+  if ((err = cpt212b_ConfigurationUnlock(I2C0)) == bg_err_success)
   {
     USTIMER_Delay(1000);
 
     // step 2: Host sends config erase command, which erases the configuration profile.
-    if ((err = Cpt212b_ConfigurationErase(I2C0)) == bg_err_success)
+    if ((err = cpt212b_ConfigurationErase(I2C0)) == bg_err_success)
     {
       USTIMER_Delay(1000*50);
 
@@ -184,14 +173,14 @@ errorcode_t FlashNewConfigurationProfile(void)
       //         repeats the step until end of profile. 
       //         Note: The host should pad the last [write bytes] command up to a payload 
       //               of 8 bytes, with 0xFF used as padding.
-      if ((err = WriteConfigurationProfile()) == bg_err_success)
+      if ((err = writeConfigurationProfile()) == bg_err_success)
       {
         USTIMER_Delay(1000*10);
 
         // step 4: host sends write CRC Command.
         uint8_t crc2 = CPT212B_A01_GM_DEFAULT_CONFIG_CHECKSUM >> 8;
         uint8_t crc1 = CPT212B_A01_GM_DEFAULT_CONFIG_CHECKSUM & 0xFF;       
-        err = Cpt212b_ConfigurationWriteCRC(I2C0, crc2, crc1);
+        err = cpt212b_ConfigurationWriteCRC(I2C0, crc2, crc1);
         USTIMER_Delay(1000*10);
       }
     }
@@ -211,7 +200,7 @@ errorcode_t FlashNewConfigurationProfile(void)
  * @return
  *   Returns results.
  *****************************************************************************/
-errorcode_t WriteConfigurationProfile(void)
+errorcode_t writeConfigurationProfile(void)
 {  
   config_profile_t pf = CPT212B_A01_GM_DEFAULT_CONFIG;
   errorcode_t err = bg_err_success;
@@ -241,7 +230,7 @@ errorcode_t WriteConfigurationProfile(void)
     }
 
     memcpy(bytes, &buf[idx], sizeof(uint8_t)*byte_len);
-    err = Cpt212b_ConfigurationWrite(I2C0, bytes, CPT212B_WRITE_CONF_PAYLOADS);
+    err = cpt212b_ConfigurationWrite(I2C0, bytes, CPT212B_WRITE_CONF_PAYLOADS);
     if (err != bg_err_success)
       return err;
 
@@ -260,7 +249,7 @@ errorcode_t WriteConfigurationProfile(void)
  * @return
  *   Returns number of bytes read/write on success. Otherwise returns error codes.
  *****************************************************************************/
-errorcode_t Cpt212b_EnterSenseMode(I2C_TypeDef *i2c)
+errorcode_t cpt212b_EnterSenseMode(I2C_TypeDef *i2c)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;
@@ -299,7 +288,7 @@ errorcode_t Cpt212b_EnterSenseMode(I2C_TypeDef *i2c)
  * @return
  *   Returns number of bytes read/write on success. Otherwise returns error codes 
  *****************************************************************************/
-errorcode_t Cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c)
+errorcode_t cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;
@@ -337,7 +326,7 @@ errorcode_t Cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c)
  * @return
  *   Returns number of bytes read/write on success. Otherwise returns error codes 
  *****************************************************************************/
-errorcode_t Cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length)
+errorcode_t cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;
@@ -374,7 +363,7 @@ errorcode_t Cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t l
  * @return
  *   Returns number of bytes read/write on success. Otherwise returns error codes.
  *****************************************************************************/
-errorcode_t Cpt212b_ConfigurationUnlock(I2C_TypeDef *i2c)
+errorcode_t cpt212b_ConfigurationUnlock(I2C_TypeDef *i2c)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;
@@ -412,7 +401,7 @@ errorcode_t Cpt212b_ConfigurationUnlock(I2C_TypeDef *i2c)
  * @return
  *   Returns number of bytes read/write on success. Otherwise returns error codes.
  *****************************************************************************/
-errorcode_t Cpt212b_ConfigurationErase(I2C_TypeDef *i2c)
+errorcode_t cpt212b_ConfigurationErase(I2C_TypeDef *i2c)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;
@@ -449,7 +438,7 @@ errorcode_t Cpt212b_ConfigurationErase(I2C_TypeDef *i2c)
  * @return
  *   Returns number of bytes read/write on success. Otherwise returns error codes.
  *****************************************************************************/
-errorcode_t Cpt212b_ConfigurationWrite(I2C_TypeDef *i2c, uint8_t data[], uint16_t length)
+errorcode_t cpt212b_ConfigurationWrite(I2C_TypeDef *i2c, uint8_t data[], uint16_t length)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;
@@ -489,7 +478,7 @@ errorcode_t Cpt212b_ConfigurationWrite(I2C_TypeDef *i2c, uint8_t data[], uint16_
  *   MSB byte of CRC
  *   Returns number of bytes read/write on success. Otherwise returns error codes.
  *****************************************************************************/
-errorcode_t Cpt212b_ConfigurationWriteCRC(I2C_TypeDef *i2c, uint8_t crc_1, uint8_t crc_2)
+errorcode_t cpt212b_ConfigurationWriteCRC(I2C_TypeDef *i2c, uint8_t crc_1, uint8_t crc_2)
 {
   I2C_TransferSeq_TypeDef    seq;
   I2C_TransferReturn_TypeDef ret;

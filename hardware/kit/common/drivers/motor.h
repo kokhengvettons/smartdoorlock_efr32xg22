@@ -41,7 +41,7 @@ extern "C" {
 void initLetimer(unsigned int dutyCycle);
 void initClockLetimer(void);
 void initGpioPwm(void);
-void enableMotorPwm(void);
+void initMotorPwm(void);
 void triggerDoorLock(bool bLock);
 void endDoorLock(void);
 

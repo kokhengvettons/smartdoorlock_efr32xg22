@@ -172,6 +172,7 @@ void appMain(const gecko_configuration_t *pconfig)
         switch (evt->data.evt_system_external_signal.extsignals)
         {
           case EXT_SIGNAL_DOOR_BUTTON_FLAG:
+            gecko_cmd_hardware_set_soft_timer(32768 * DOOR_BUTTON_DEBOUNCE_INTERVAL_MS / 1000, SOFT_TIMER_DOOR_BUTTON_HANDLER, true);
             break;
           case EXT_SIGNAL_DOOR_SENSOR_FLAG:
             gecko_cmd_hardware_set_soft_timer(32768 * DOOR_SENSOR_INTERVAL_MS / 1000, SOFT_TIMER_DOOR_SENSOR_HANDLER, true);
@@ -192,6 +193,9 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case SOFT_TIMER_DOOR_SENSOR_HANDLER:
             evt_door_sensor_send_notification();
+            break;
+          case SOFT_TIMER_DOOR_BUTTON_HANDLER:
+            evt_door_button_ext_signal();
             break;
           default:
             break;
@@ -240,6 +244,23 @@ void evt_door_lock(uint8_t data[], uint16_t length)
       triggerDoorLock(false);
       door_lock_status = DOOR_UNLOCK;
     }
+  }
+}
+
+/* press door button to lock/unloc the door */
+void evt_door_button_ext_signal(void)
+{
+  if (door_lock_status == DOOR_UNLOCK)
+  {
+    triggerDoorLock(true);
+    door_lock_status = DOOR_LOCK;
+    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_lock, sizeof(doorLock), doorLock);
+  }
+  else
+  {
+    triggerDoorLock(false);
+    door_lock_status = DOOR_UNLOCK;
+    gecko_cmd_gatt_server_send_characteristic_notification(0xFF,gattdb_door_lock, sizeof(doorUnlock), doorUnlock);
   }
 }
 

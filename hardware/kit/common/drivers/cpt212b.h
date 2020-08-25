@@ -103,20 +103,20 @@ extern "C" {
 /*******************************************************************************
  *****************************   PROTOTYPES   **********************************
  ******************************************************************************/
-
-errorcode_t InitCpt212b(void);
-errorcode_t FlashNewConfigurationProfile(void);
-errorcode_t WriteConfigurationProfile(void);
-void Cpt212b_SensorReset(void);
-void Cpt212b_SensorEnable(bool bEnable);
+void initGpioI2c(void);
+void cpt212b_SensorReset(void);
+void cpt212b_SensorEnable(bool bEnable);
 void PacketCounterHandler(bool bReset);
-errorcode_t Cpt212b_EnterSenseMode(I2C_TypeDef *i2c);
-errorcode_t Cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c);
-errorcode_t Cpt212b_ConfigurationUnlock(I2C_TypeDef *i2c);
-errorcode_t Cpt212b_ConfigurationErase(I2C_TypeDef *i2c);
-errorcode_t Cpt212b_ConfigurationWrite(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
-errorcode_t Cpt212b_ConfigurationWriteCRC(I2C_TypeDef *i2c, uint8_t crc_1, uint8_t crc_2);
-errorcode_t Cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
+errorcode_t initcpt212b(void);
+errorcode_t flashNewConfigurationProfile(void);
+errorcode_t writeConfigurationProfile(void);
+errorcode_t cpt212b_EnterSenseMode(I2C_TypeDef *i2c);
+errorcode_t cpt212b_ConfigurationProfileValidation(I2C_TypeDef *i2c);
+errorcode_t cpt212b_ConfigurationUnlock(I2C_TypeDef *i2c);
+errorcode_t cpt212b_ConfigurationErase(I2C_TypeDef *i2c);
+errorcode_t cpt212b_ConfigurationWrite(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
+errorcode_t cpt212b_ConfigurationWriteCRC(I2C_TypeDef *i2c, uint8_t crc_1, uint8_t crc_2);
+errorcode_t cpt212b_ReadKeypadEvent(I2C_TypeDef *i2c, uint8_t data[], uint16_t length);
 
 #ifdef __cplusplus
 }
