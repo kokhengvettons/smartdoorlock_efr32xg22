@@ -43,22 +43,27 @@
 /***************************************************************************************************
  * External signal indication
  **************************************************************************************************/
-#define EXT_SIGNAL_I2C_INTERRUP_FLAG     1
-#define EXT_SIGNAL_DOOR_SENSOR_FLAG      2
-#define EXT_SIGNAL_DOOR_BUTTON_FLAG      3
+#define EXT_SIGNAL_I2C_INTERRUP_FLAG        1
+#define EXT_SIGNAL_DOOR_SENSOR_FLAG         2
+#define EXT_SIGNAL_DOOR_BUTTON_FLAG         3
 /***************************************************************************************************
- * Software timer handler
+ * Software timer
  **************************************************************************************************/
-#define SOFT_TIMER_MOTOR_PWM_HANDLER     0
-#define SOFT_TIMER_DOOR_SENSOR_HANDLER   1
-#define SOFT_TIMER_DOOR_BUTTON_HANDLER   2
+#define SOFT_TIMER_MOTOR_PWM_HANDLER        0
+#define SOFT_TIMER_DOOR_SENSOR_HANDLER      1
+#define SOFT_TIMER_DOOR_BUTTON_HANDLER      2
 
-#define DOOR_SENSOR_INTERVAL_MS          100     // 100ms
-#define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS 200     // 200ms
+#define DOOR_SENSOR_INTERVAL_MS             100     // 100ms
+#define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     // 500ms
+/***************************************************************************************************
+ * Interrupt source
+ **************************************************************************************************/
+#define INT_SOURCE_KEYPAD_EVENT             1
+#define INT_SOURCE_DOOR_SENSOR              2
+#define INT_SOURCE_DOOR_OPEN_BUTTON         3
 
 typedef enum {DOOR_UNLOCK = 0, DOOR_LOCK = 1} door_lock_TypeDef;
 typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
-
 
 /* Main application */
 void appMain(const gecko_configuration_t *pconfig);

@@ -262,8 +262,10 @@ void doorOpenButtonInterruptHandler(uint8_t pinNum)
 
   // clear the interrupt flags
   GPIO_IntClear(GPIO_IntGet());
+  
+  // disable the interrupt to prevent button debouncing issue
+  GPIO_IntDisable(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
 }
-
 
 /**
  * @brief  initialize GPIO module
@@ -279,16 +281,16 @@ void initGpio(void)
   GPIO_PinModeSet(gpioPortB, 0, gpioModeInputPull, 1);
 
   // configure PC02 as rising & falling edge trigger on GPIO interrupt source 2 for door sensor
-  GPIO_ExtIntConfig(gpioPortC, 2, 2, true, true, true);
+  GPIO_ExtIntConfig(gpioPortC, 2, INT_SOURCE_DOOR_SENSOR, true, true, true);
 
   // configure PB00 as falling edge trigger on GPIO interrupt source 3 for door sensor
-  GPIO_ExtIntConfig(gpioPortB, 0, 3, false, true, true);
+  GPIO_ExtIntConfig(gpioPortB, 0, INT_SOURCE_DOOR_OPEN_BUTTON, false, true, true);
 
   // Initialize GPIOINT and register a callback
   GPIOINT_Init();
-  GPIOINT_CallbackRegister(1, keypadEventInterruptHandler);
-  GPIOINT_CallbackRegister(2, doorSensorInterruptHandler);
-  GPIOINT_CallbackRegister(3, doorOpenButtonInterruptHandler);
+  GPIOINT_CallbackRegister(INT_SOURCE_KEYPAD_EVENT, keypadEventInterruptHandler);
+  GPIOINT_CallbackRegister(INT_SOURCE_DOOR_SENSOR, doorSensorInterruptHandler);
+  GPIOINT_CallbackRegister(INT_SOURCE_DOOR_OPEN_BUTTON, doorOpenButtonInterruptHandler);
 }
 
 /**
@@ -310,7 +312,6 @@ void initUserApp()
 
   // Initialize GPIO module
   initGpio();
-
 }
 
 /**

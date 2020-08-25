@@ -95,9 +95,11 @@ void initMotorPwm(void)
  *****************************************************************************/
 void triggerDoorLock(bool bLock)
 {
+  // prevent door lock trigger by door open button
+  GPIO_IntDisable(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
+
   if (bLock)
-  {    
-    // set soft timer as 350ms (i.e. 11468/32768 ~= 350)
+  {
     gecko_cmd_hardware_set_soft_timer(32768 * MOTOR_PWM_INTERVAL_MS / 1000, 
                                       SOFT_TIMER_MOTOR_PWM_HANDLER, true);
 
@@ -118,4 +120,7 @@ void triggerDoorLock(bool bLock)
 void endDoorLock(void)
 {
   LETIMER_Enable(LETIMER0, false);
+
+  // door open button interrupt will trigger by software timer instead
+  gecko_cmd_hardware_set_soft_timer(32768 * DOOR_BUTTON_DEBOUNCE_INTERVAL_MS / 1000, SOFT_TIMER_DOOR_BUTTON_HANDLER, true);
 }

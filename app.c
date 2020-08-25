@@ -172,7 +172,7 @@ void appMain(const gecko_configuration_t *pconfig)
         switch (evt->data.evt_system_external_signal.extsignals)
         {
           case EXT_SIGNAL_DOOR_BUTTON_FLAG:
-            gecko_cmd_hardware_set_soft_timer(32768 * DOOR_BUTTON_DEBOUNCE_INTERVAL_MS / 1000, SOFT_TIMER_DOOR_BUTTON_HANDLER, true);
+            evt_door_button_ext_signal();
             break;
           case EXT_SIGNAL_DOOR_SENSOR_FLAG:
             gecko_cmd_hardware_set_soft_timer(32768 * DOOR_SENSOR_INTERVAL_MS / 1000, SOFT_TIMER_DOOR_SENSOR_HANDLER, true);
@@ -189,13 +189,13 @@ void appMain(const gecko_configuration_t *pconfig)
         switch(evt->data.evt_hardware_soft_timer.handle)
         {
           case SOFT_TIMER_MOTOR_PWM_HANDLER:
-            endDoorLock();
+            endDoorLock();            
             break;
           case SOFT_TIMER_DOOR_SENSOR_HANDLER:
             evt_door_sensor_send_notification();
             break;
           case SOFT_TIMER_DOOR_BUTTON_HANDLER:
-            evt_door_button_ext_signal();
+            GPIO_IntEnable(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
             break;
           default:
             break;
