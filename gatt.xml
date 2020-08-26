@@ -21,7 +21,7 @@
     <!--Hardware Revision String-->
     <characteristic id="hardware_revision_string" name="Hardware Revision String" sourceId="org.bluetooth.characteristic.hardware_revision_string" uuid="2A27">
       <informativeText>Summary:  The value of this characteristic is a UTF-8 string representing the hardware revision for the hardware within the device.  </informativeText>
-      <value length="16" type="utf-8" variable_length="false">20200622HW00V001</value>
+      <value length="8" type="utf-8" variable_length="false">v1.00.00</value>
       <properties read="true" read_requirement="optional"/>
     </characteristic>
     
@@ -35,14 +35,7 @@
     <!--Serial Number String-->
     <characteristic id="serial_number_string" name="Serial Number String" sourceId="org.bluetooth.characteristic.serial_number_string" uuid="2A25">
       <informativeText>Abstract:  The value of this characteristic is a variable-length UTF-8 string representing the serial number for a particular instance of the device.  </informativeText>
-      <value length="8" type="utf-8" variable_length="false"/>
-      <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
-    </characteristic>
-    
-    <!--Date Time-->
-    <characteristic id="date_time" name="Date Time" sourceId="org.bluetooth.characteristic.date_time" uuid="2A08">
-      <informativeText>Abstract:  The Date Time characteristic is used to represent time.  Summary:  The Date Time characteristic contains fields for year, month, day, hours, minutes and seconds. Calendar days in Date Time are represented using Gregorian calendar. Hours in Date Time are represented in the 24h system.  </informativeText>
-      <value length="4" type="hex" variable_length="false"/>
+      <value length="36" type="utf-8" variable_length="false"/>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
   </service>

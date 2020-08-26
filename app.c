@@ -45,6 +45,8 @@ const uint8_t door_closed[6]     = {"CLOSED"};
 static void bootMessage(struct gecko_msg_system_boot_evt_t *bootevt);
 static void evt_door_sensor_send_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt);
 static void evt_door_lock_send_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt);
+static void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val);
+static void evt_write_attribute_from_flash(uint16_t attribute_id);
 
 /* Main application */
 void appMain(const gecko_configuration_t *pconfig)
@@ -88,12 +90,9 @@ void appMain(const gecko_configuration_t *pconfig)
          * The last two parameters are duration and maxevents left as default. */
         gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
 
-        struct gecko_msg_flash_ps_load_rsp_t *pResp;
-        pResp = gecko_cmd_flash_ps_load(gattdb_device_name + PS_KEY_BASE);
-        if(pResp->result == 0)
-        {
-          gecko_cmd_gatt_server_write_attribute_value(gattdb_device_name, 0, pResp->value.len, pResp->value.data);
-        }
+        // retrieve the attribute value from flash before start advertising
+        evt_write_attribute_from_flash(gattdb_device_name);
+        evt_write_attribute_from_flash(gattdb_serial_number_string);
 
         /* Start general advertising and enable connections. */
         gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
@@ -173,10 +172,10 @@ void appMain(const gecko_configuration_t *pconfig)
         switch(evt->data.evt_gatt_server_attribute_value.attribute)
         {
           case gattdb_device_name:
-            gecko_cmd_flash_ps_save(gattdb_device_name + PS_KEY_BASE, evt->data.evt_gatt_server_attribute_value.value.len, 
-                                    evt->data.evt_gatt_server_attribute_value.value.data);
-            gecko_cmd_gatt_server_write_attribute_value(gattdb_device_name, 0, evt->data.evt_gatt_server_attribute_value.value.len,
-                                                        evt->data.evt_gatt_server_attribute_value.value.data);
+            evt_write_attribute(gattdb_device_name, &(evt->data.evt_gatt_server_attribute_value));
+            break;
+          case gattdb_serial_number_string:
+            evt_write_attribute(gattdb_serial_number_string, &(evt->data.evt_gatt_server_attribute_value));
             break;
           default:
             break;
@@ -327,20 +326,20 @@ void evt_door_lock_send_response(struct gecko_msg_gatt_server_user_read_request_
   }
 }
 
-// void evt_set_leds(uint8_t data)
-// {
-//   if (data & 0x01)
-//     GPIO_PinOutSet(BSP_LED0_PORT, BSP_LED0_PIN);
-//   else
-//     GPIO_PinOutClear(BSP_LED0_PORT, BSP_LED0_PIN);
+/* Store attribute value into flash by specified PS key */
+void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val)
+{
+  gecko_cmd_flash_ps_save(PS_KEY_BASE + attribute_id, attr_val->value.len, attr_val->value.data);
+  gecko_cmd_gatt_server_write_attribute_value(attribute_id, 0, attr_val->value.len, attr_val->value.data);
+}
 
-//   if (data & 0x02)
-//     GPIO_PinOutSet(BSP_LED1_PORT, BSP_LED1_PIN);
-//   else
-//     GPIO_PinOutClear(BSP_LED1_PORT, BSP_LED1_PIN);
-// }
-
-// uint8_t evt_get_leds(void)
-// {
-//   return ((GPIO_PinOutGet(BSP_LED1_PORT, BSP_LED1_PIN) << 1) | GPIO_PinOutGet(BSP_LED0_PORT, BSP_LED0_PIN));
-// }
+/* Read attribute value from flash then write the attribute */
+void evt_write_attribute_from_flash(uint16_t attribute_id)
+{
+  struct gecko_msg_flash_ps_load_rsp_t *pResp;
+  pResp = gecko_cmd_flash_ps_load(PS_KEY_BASE + attribute_id);
+  if (pResp->result == 0)
+  {
+    gecko_cmd_gatt_server_write_attribute_value(attribute_id, 0, pResp->value.len, pResp->value.data);
+  }
+}
