@@ -93,6 +93,7 @@ void appMain(const gecko_configuration_t *pconfig)
         // retrieve the attribute value from flash before start advertising
         evt_write_attribute_from_flash(gattdb_device_name);
         evt_write_attribute_from_flash(gattdb_serial_number_string);
+        evt_write_attribute_from_flash(gattdb_door_alarm_trigger_time);
 
         /* Start general advertising and enable connections. */
         gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
@@ -176,6 +177,9 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case gattdb_serial_number_string:
             evt_write_attribute(gattdb_serial_number_string, &(evt->data.evt_gatt_server_attribute_value));
+            break;
+          case gattdb_door_alarm_trigger_time:
+            evt_write_attribute(gattdb_door_alarm_trigger_time, &(evt->data.evt_gatt_server_attribute_value));
             break;
           default:
             break;
