@@ -88,6 +88,13 @@ void appMain(const gecko_configuration_t *pconfig)
          * The last two parameters are duration and maxevents left as default. */
         gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
 
+        struct gecko_msg_flash_ps_load_rsp_t *pResp;
+        pResp = gecko_cmd_flash_ps_load(gattdb_device_name + PS_KEY_BASE);
+        if(pResp->result == 0)
+        {
+          gecko_cmd_gatt_server_write_attribute_value(gattdb_device_name, 0, pResp->value.len, pResp->value.data);
+        }
+
         /* Start general advertising and enable connections. */
         gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
         break;
@@ -139,11 +146,6 @@ void appMain(const gecko_configuration_t *pconfig)
             gecko_cmd_gatt_server_send_user_write_response(evt->data.evt_gatt_server_user_write_request.connection, 
                                                             gattdb_door_lock, bg_err_success);
             break;
-//          case gattdb_digital_out:
-//            evt_set_leds(evt->data.evt_gatt_server_attribute_value.value.data[0]);
-//            gecko_cmd_gatt_server_send_user_write_response(evt->data.evt_gatt_server_user_write_request.connection,
-//                                                            gattdb_digital_out, bg_err_success);
-//            break;
           default:
             break;
         }
@@ -161,6 +163,20 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case gattdb_door_status:
             evt_door_sensor_send_response(&(evt->data.evt_gatt_server_user_read_request));
+            break;
+          default:
+            break;
+        }
+        break;
+
+      case gecko_evt_gatt_server_attribute_value_id:
+        switch(evt->data.evt_gatt_server_attribute_value.attribute)
+        {
+          case gattdb_device_name:
+            gecko_cmd_flash_ps_save(gattdb_device_name + PS_KEY_BASE, evt->data.evt_gatt_server_attribute_value.value.len, 
+                                    evt->data.evt_gatt_server_attribute_value.value.data);
+            gecko_cmd_gatt_server_write_attribute_value(gattdb_device_name, 0, evt->data.evt_gatt_server_attribute_value.value.len,
+                                                        evt->data.evt_gatt_server_attribute_value.value.data);
             break;
           default:
             break;

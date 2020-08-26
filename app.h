@@ -46,6 +46,7 @@
 #define EXT_SIGNAL_I2C_INTERRUP_FLAG        1
 #define EXT_SIGNAL_DOOR_SENSOR_FLAG         2
 #define EXT_SIGNAL_DOOR_BUTTON_FLAG         3
+
 /***************************************************************************************************
  * Software timer
  **************************************************************************************************/
@@ -55,12 +56,15 @@
 
 #define DOOR_SENSOR_INTERVAL_MS             100     // 100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     // 500ms
+
 /***************************************************************************************************
  * Interrupt source
  **************************************************************************************************/
 #define INT_SOURCE_KEYPAD_EVENT             1
 #define INT_SOURCE_DOOR_SENSOR              2
 #define INT_SOURCE_DOOR_OPEN_BUTTON         3
+
+#define PS_KEY_BASE                         0x4000
 
 typedef enum {DOOR_UNLOCK = 0, DOOR_LOCK = 1} door_lock_TypeDef;
 typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
