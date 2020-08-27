@@ -10,6 +10,7 @@ makefile
 *.axf
 *.bin
 *.s37
+*.bak
 .settings/*
 doxygen/*
 build_util/*
