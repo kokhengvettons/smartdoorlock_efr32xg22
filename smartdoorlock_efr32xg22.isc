@@ -80,7 +80,7 @@ appPlugin: stack_bridge=false
     </characteristic>
     <characteristic id="door_password" name="Door Password" sourceId="custom.type" uuid="03bcf0fb-58e6-461b-b2fc-bcebdd2a6c1e">
       <informativeText>Custom characteristic</informativeText>
-      <value length="6" type="user" variable_length="false">0x00</value>
+      <value length="6" type="hex" variable_length="false">0x00</value>
       <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
     <characteristic id="door_alarm_trigger_time" name="Door Alarm Trigger Time" sourceId="custom.type" uuid="16228604-0b64-4018-9fd0-d54b79858a44">

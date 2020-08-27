@@ -80,12 +80,9 @@
  **************************************************************************************************/
 
 /* Application declaration*/
-#define DOOR_KEY_PW_SIZE  6
-
-static uint8_t keypadPassword[DOOR_KEY_PW_SIZE];
-static uint8_t doorAccessKey[DOOR_KEY_PW_SIZE];
-static uint8_t passwordCounter = 0;
-static bool doorAccessPass = false;
+#define DOOR_KEY_ACCESS_LEN  6
+static uint8_t keypadValue[DOOR_KEY_ACCESS_LEN * 2];
+static uint8_t keypadNum = 0;
 
 /* Gecko configuration parameters (see gecko_configuration.h) */
 #ifndef MAX_CONNECTIONS
@@ -161,26 +158,12 @@ void temperatureMeasure()
 }
 
 /**
- * @brief  retrieve the door access key from flash memory
- */
-void retrieveDoorKeyAccess(void)
-{
-  // TODO: [LAI] retrieve the access key from flash memory.
-  doorAccessKey[0] = CPT212B_TOUCH_EVENT_CS1;
-  doorAccessKey[1] = CPT212B_TOUCH_EVENT_CS2;
-  doorAccessKey[2] = CPT212B_TOUCH_EVENT_CS3;
-  doorAccessKey[3] = CPT212B_TOUCH_EVENT_CS4;
-  doorAccessKey[4] = CPT212B_TOUCH_EVENT_CS5;
-  doorAccessKey[5] = CPT212B_TOUCH_EVENT_CS6;
-}
-
-/**
  * @brief  Reset the door key from the user
  */
 void resetDoorKeyValue(void)
 {
-  memset(keypadPassword, 0, sizeof(uint8_t)*DOOR_KEY_PW_SIZE);
-  passwordCounter = 0;
+  memset(keypadValue, 0, sizeof(uint8_t)*DOOR_KEY_ACCESS_LEN);
+  keypadNum = 0;
 }
 
 /**
@@ -188,18 +171,6 @@ void resetDoorKeyValue(void)
  */
 void initDoorAccess(void)
 {
-  retrieveDoorKeyAccess();
-  resetDoorKeyValue();
-}
-
-/**
- * @brief  Open the door after success the door key validation
- */
-void openDoor(void)
-{
-  // open the door
-
-  // reset the door key from the user
   resetDoorKeyValue();
 }
 
@@ -211,31 +182,27 @@ void keypadEventInterruptHandler(uint8_t pinNum)
   int eventTypeValue = eventData[0] & 0x0F;
   if (eventTypeValue == CPT212B_SENSE_EVENT_TOUCH)
   {
-    // reset the door key value when user press reset button
+    // when pressed # button, send the notification with door passs key to client
     if (eventData[1] == CPT212B_TOUCH_EVENT_CS10)
-    {
+    {     
+      uint8_t key[DOOR_KEY_ACCESS_LEN]; 
+      if (keypadNum >= DOOR_KEY_ACCESS_LEN)
+      {
+        memcpy(key, &keypadValue[keypadNum - DOOR_KEY_ACCESS_LEN], sizeof(uint8_t) * DOOR_KEY_ACCESS_LEN);
+        gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_password, sizeof(key), key);
+      }
       resetDoorKeyValue();
     }
     else
     {
-      keypadPassword[passwordCounter] = eventData[1];
-      if (keypadPassword[passwordCounter] == doorAccessKey[passwordCounter])
-        doorAccessPass = true;
-      else
-        doorAccessPass = false;
-      
-      // at here, increase the counter
-      passwordCounter++;
-
-      if (passwordCounter == DOOR_KEY_PW_SIZE && doorAccessPass == true)
-      {
-        openDoor();
-      }
+      keypadValue[keypadNum++] = eventData[1];
+      if (keypadNum == DOOR_KEY_ACCESS_LEN * 2)
+        keypadNum = 0;
     }
   }
   else if (eventTypeValue == CPT212B_SENSE_EVENT_PROXIMITY)
   {
-
+    // TODO: activate the keypad
   }
 
   // clear the interrupt flags
