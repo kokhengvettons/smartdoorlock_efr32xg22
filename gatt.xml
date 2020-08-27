@@ -82,14 +82,14 @@
     <!--Door Alarm Trigger Time-->
     <characteristic id="door_alarm_trigger_time" name="Door Alarm Trigger Time" sourceId="custom.type" uuid="16228604-0b64-4018-9fd0-d54b79858a44">
       <informativeText>Custom characteristic</informativeText>
-      <value length="4" type="hex" variable_length="false"/>
+      <value length="2" type="hex" variable_length="false">10</value>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
     <!--Door Alarm Status-->
     <characteristic id="door_alarm_status" name="Door Alarm Status" sourceId="custom.type" uuid="6a8612e1-030f-41dc-9dd3-7ac3b3adb1c7">
       <informativeText>Custom characteristic</informativeText>
-      <value length="3" type="utf-8" variable_length="true">OFF</value>
+      <value length="3" type="user" variable_length="true"/>
       <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
   </service>

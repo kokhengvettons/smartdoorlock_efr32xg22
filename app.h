@@ -53,9 +53,13 @@
 #define SOFT_TIMER_MOTOR_PWM_HANDLER        0
 #define SOFT_TIMER_DOOR_SENSOR_HANDLER      1
 #define SOFT_TIMER_DOOR_BUTTON_HANDLER      2
+#define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    3
+#define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   4
 
 #define DOOR_SENSOR_INTERVAL_MS             100     // 100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     // 500ms
+#define DOOR_ALARM_DEFAULT_INTERVAL_MS      10000   // 10s
+#define DOOR_ALARM_OFF_INTERVAL_MS          200     // 200ms
 
 /***************************************************************************************************
  * Interrupt source
@@ -68,6 +72,7 @@
 
 typedef enum {DOOR_UNLOCK = 0, DOOR_LOCK = 1} door_lock_TypeDef;
 typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
+typedef enum {ALARM_OFF = 0, ALARM_ON = 1} door_alarm_status_TypedDef;
 
 /* Main application */
 void appMain(const gecko_configuration_t *pconfig);
@@ -75,6 +80,7 @@ void initMainBoardGPIO(void);
 
 void evt_door_lock(uint8_t data[], uint16_t length);
 void evt_door_sensor_send_notification(void);
+void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
 
 // void evt_set_leds(uint8_t data);

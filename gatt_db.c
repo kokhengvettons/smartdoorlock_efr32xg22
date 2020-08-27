@@ -79,26 +79,22 @@ GATT_DATA(const struct bg_gattdb_buffer_with_len	bg_gattdb_data_attribute_field_
 	.len=16,
 	.data={0xf0,0x19,0x21,0xb4,0x47,0x8f,0xa4,0xbf,0xa1,0x4f,0x63,0xfd,0xee,0xd6,0x14,0x1d,}
 };
-struct bg_gattdb_buffer_with_len	bg_gattdb_data_attribute_field_35_data = {
-	.len=3,
-	.data={0x4f,0x46,0x46,}
-};
 GATT_DATA(const struct bg_gattdb_attribute_chrvalue	bg_gattdb_data_attribute_field_35 ) = {
 	.properties=0x22,
 	.index=13,
-	.max_len=3,
-	.data_varlen=&bg_gattdb_data_attribute_field_35_data,
+	.max_len=0,
+	.data=NULL,
 };
 
 GATT_DATA(const struct bg_gattdb_buffer_with_len	bg_gattdb_data_attribute_field_34 ) = {
 	.len=19,
 	.data={0x22,0x24,0x00,0xc7,0xb1,0xad,0xb3,0xc3,0x7a,0xd3,0x9d,0xdc,0x41,0x0f,0x03,0xe1,0x12,0x86,0x6a,}
 };
-uint8_t bg_gattdb_data_attribute_field_33_data[4]={0x00,0x00,0x00,0x00,};
+uint8_t bg_gattdb_data_attribute_field_33_data[2]={0x10,0x00,};
 GATT_DATA(const struct bg_gattdb_attribute_chrvalue	bg_gattdb_data_attribute_field_33 ) = {
 	.properties=0x0a,
 	.index=12,
-	.max_len=4,
+	.max_len=2,
 	.data=bg_gattdb_data_attribute_field_33_data,
 };
 
@@ -302,7 +298,7 @@ GATT_DATA(const struct bg_gattdb_attribute bg_gattdb_data_attributes_map[])={
     {.uuid=0x0002,.permissions=0x801,.caps=0xffff,.datatype=0x00,.constdata=&bg_gattdb_data_attribute_field_32},
     {.uuid=0x8004,.permissions=0x803,.caps=0xffff,.datatype=0x01,.dynamicdata=&bg_gattdb_data_attribute_field_33},
     {.uuid=0x0002,.permissions=0x801,.caps=0xffff,.datatype=0x00,.constdata=&bg_gattdb_data_attribute_field_34},
-    {.uuid=0x8005,.permissions=0x801,.caps=0xffff,.datatype=0x02,.dynamicdata=&bg_gattdb_data_attribute_field_35},
+    {.uuid=0x8005,.permissions=0x801,.caps=0xffff,.datatype=0x07,.dynamicdata=&bg_gattdb_data_attribute_field_35},
     {.uuid=0x0011,.permissions=0x807,.caps=0xffff,.datatype=0x03,.configdata={.flags=0x02,.index=0x0d,.clientconfig_index=0x04}},
     {.uuid=0x0000,.permissions=0x801,.caps=0xffff,.datatype=0x00,.constdata=&bg_gattdb_data_attribute_field_37},
     {.uuid=0x0002,.permissions=0x801,.caps=0xffff,.datatype=0x00,.constdata=&bg_gattdb_data_attribute_field_38},

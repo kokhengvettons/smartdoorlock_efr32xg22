@@ -467,7 +467,7 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
-	<storageModule generalProj.esf.protocolIds="com.silabs.sdk.stack.super:2.7.6._310455041.com.silabs.stack.ble:2.13.6.0_1685155431" generalProj.esf.protocolNames="ble" moduleId="com.silabs.ss.framework.ide.project.core.cpp" project.generation="40" projectCommon.boardIds="brd4001a:0.0.0.A01 brd4182a:0.0.0.B03" projectCommon.buildArtifactType="EXE" projectCommon.importModeId="LINK_LIBRARIES" projectCommon.partId="mcu.arm.efr32.mg22.efr32mg22c224f512im40" projectCommon.sdkId="com.silabs.sdk.stack.super:2.7.6._310455041" projectCommon.toolchainId="com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt:7.2.1.20170904"/>
+	<storageModule generalProj.esf.protocolIds="com.silabs.sdk.stack.super:2.7.6._310455041.com.silabs.stack.ble:2.13.6.0_1685155431" generalProj.esf.protocolNames="ble" moduleId="com.silabs.ss.framework.ide.project.core.cpp" project.generation="21" projectCommon.boardIds="brd4001a:0.0.0.A01 brd4182a:0.0.0.B03" projectCommon.buildArtifactType="EXE" projectCommon.importModeId="LINK_LIBRARIES" projectCommon.partId="mcu.arm.efr32.mg22.efr32mg22c224f512im40" projectCommon.sdkId="com.silabs.sdk.stack.super:2.7.6._310455041" projectCommon.toolchainId="com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt:7.2.1.20170904"/>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="soc-thermometer.com.silabs.ss.framework.ide.project.core.cdt.cdtMbsProjectType.972474445" name="SLS CDT Project" projectType="com.silabs.ss.framework.ide.project.core.cdt.cdtMbsProjectType"/>
 	</storageModule>
