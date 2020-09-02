@@ -65,7 +65,7 @@ void initIAdc (void)
   init.srcClkPrescale = IADC_calcSrcClkPrescale(IADC0, CLK_SRC_ADC_FREQ, 0);
 
   // 25ns per cycle, 40000 cycles make 1ms timer event
-  init.timerCycles = 400; // 0.01ms
+  init.timerCycles = 20000; // 0.5ms
 
   // Configuration 0 is used by both scan and single conversions by default
   // Use unbuffered AVDD as reference
