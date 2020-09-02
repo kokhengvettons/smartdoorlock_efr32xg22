@@ -34,9 +34,6 @@
 static uint8_t boot_to_dfu            = 0;
 
 /* Flag for indicating Door status */
-static uint8_t door_lock_status       = DOOR_UNLOCK;
-static uint8_t door_status            = DOOR_OPEN;
-static uint8_t door_alarm_status      = ALARM_OFF;
 const uint8_t doorLock[4]             = {"LOCK"};
 const uint8_t doorUnlock[6]           = {"UNLOCK"};
 const uint8_t door_open[4]            = {"OPEN"};
@@ -44,6 +41,9 @@ const uint8_t door_closed[6]          = {"CLOSED"};
 const uint8_t door_alarm_on[2]        = {"ON"};
 const uint8_t door_alarm_off[3]       = {"OFF"};
 
+static uint8_t door_lock_status       = DOOR_UNLOCK;
+static uint8_t door_status            = DOOR_OPEN;
+static uint8_t door_alarm_status      = ALARM_OFF;
 static uint32_t door_alarm_time_in_s  = DOOR_ALARM_DEFAULT_INTERVAL_MS / 1000;
 
 /* static function */
@@ -66,6 +66,9 @@ void appMain(const gecko_configuration_t *pconfig)
 
   /* Initialize stack */
   gecko_init(pconfig);
+
+  /* measure battery level */
+  triggerBatteryMeasurement(ALL_TYPE_BATTER);
 
   while (1) {
     /* Event pointer for handling events */
@@ -160,10 +163,6 @@ void appMain(const gecko_configuration_t *pconfig)
       case gecko_evt_gatt_server_user_read_request_id:
         switch(evt->data.evt_gatt_server_user_read_request.characteristic)
         {
-          case gattdb_battery_level:
-            break;
-          case gattdb_door_password:
-            break;
           case gattdb_door_lock:
             evt_door_lock_send_read_response(&(evt->data.evt_gatt_server_user_read_request));
             break;
@@ -232,7 +231,10 @@ void appMain(const gecko_configuration_t *pconfig)
             evt_door_alarm_send_notification(ALARM_OFF);
             break;
           case SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER:
-            evt_motor_battery_measurement(MOTOR_BAT);
+            evt_motor_battery_measurement();
+            break;
+          case SOFT_TIMER_BATTERY_MEAS_HANDLER:
+            evt_update_battery_measurement();
             break;
           default:
             break;
@@ -339,7 +341,6 @@ void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status)
   }
 }
 
-
 /* Send an read response to remote GATT client for door status*/
 void evt_door_sensor_send_read_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt)
 {
@@ -430,10 +431,47 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
 }
 
 /* motor battery measurement */
-void evt_motor_battery_measurement(battery_measure_TypeDef measure_type)
+void evt_motor_battery_measurement(void)
 {
   if (indexAdcSample >= NUM_ADC_SAMPLE)
-    terminateBatteryMeasurement(measure_type);
+    terminateMotorBatteryMeasurement();
   else              
-    setBatteryADCCommand(iadcCmdStartScan);
+    triggerADCScanAgain();
+}
+
+/* update the battery measurement value to batter level attribute */
+void evt_update_battery_measurement(void)
+{
+  uint8_t data = 0;
+  float voltage = 0;
+  
+  for (int idx = 0; idx < NUM_ADC_INPUT; idx++)
+  {    
+    if (idx == 0)
+    {
+      // for cell coil battery
+      voltage = (batterySteps[idx] * 3.3 / 0xFFF) * 1;
+      data = (uint8_t)((voltage - COIL_CELL_BATTERY_MIN / 
+              (COIL_CELL_BATTERY_MAX - COIL_CELL_BATTERY_MIN)) * 100);
+
+      if (data > 100)
+        data = 100;
+      
+      gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level, 0, 1, &data);
+    }
+    else if (idx == 1)
+    {
+      // for dc motor battery
+      voltage = (batterySteps[idx] * 3.3 / 0xFFF) * 1;
+      data = (uint8_t)((voltage - MOTOR_BATTERY_MIN / 
+              (MOTOR_BATTERY_MAX - MOTOR_BATTERY_MIN)) * 100);
+      
+      if (data > 100)
+        data = 100;
+
+      gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level_motor, 0, 1, &data);
+    }
+
+
+  }
 }

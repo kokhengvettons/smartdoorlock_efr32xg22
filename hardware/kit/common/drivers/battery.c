@@ -20,10 +20,6 @@
 #include "app.h"
 #include "native_gecko.h"
 
-volatile double scanResult[NUM_INPUTS];
-
-uint16_t motorADCBuffer[NUM_ADC_SAMPLE];
-
 static battery_measure_TypeDef batteryMeasureType; 
 
 /**************************************************************************//**
@@ -69,7 +65,7 @@ void initIAdc (void)
   init.srcClkPrescale = IADC_calcSrcClkPrescale(IADC0, CLK_SRC_ADC_FREQ, 0);
 
   // 25ns per cycle, 40000 cycles make 1ms timer event
-  init.timerCycles = 40000;
+  init.timerCycles = 400; // 0.01ms
 
   // Configuration 0 is used by both scan and single conversions by default
   // Use unbuffered AVDD as reference
@@ -83,7 +79,7 @@ void initIAdc (void)
                                              init.srcClkPrescale);
 
   // Scan initialization
-  initScan.triggerSelect = iadcTriggerSelImmediate; // not using timer
+  initScan.triggerSelect = iadcTriggerSelTimer;
   initScan.dataValidLevel = _IADC_SCANFIFOCFG_DVL_VALID2;
 
   // Tag FIFO entry with scan table entry id.
@@ -131,8 +127,8 @@ void initBatteryADCMeasurement(void)
   // Initialize the IADC
   initIAdc();
 
-  // reset the ADC sample Index
-  indexAdcSample = 0;
+  // reset the data buffer
+  memset(batterySteps, 0, sizeof(batterySteps));
 }
 
 /**************************************************************************//**
@@ -142,40 +138,53 @@ void triggerBatteryMeasurement(battery_measure_TypeDef measure_type)
 {
   batteryMeasureType = measure_type;
 
-  if (measure_type == MOTOR_BAT)
+  if (measure_type == MOTOR_BATTERY_ONLY)
   {
     indexAdcSample = 0;
-    memset(motorADCBuffer, 0, sizeof(motorADCBuffer));
+    memset(motorBatterySteps, 0, sizeof(motorBatterySteps));
     gecko_cmd_hardware_set_soft_timer(32768 * MOTOR_ADC_MEAS_INTERVAL_MS / 1000, 
                                       SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER, false);
-  }    
 
-  setBatteryADCCommand(iadcCmdStartScan);
+    //GPIO_PinOutSet(BSP_LED1_PORT, BSP_LED1_PIN);  
+  }
+  else
+  {    
+    gecko_cmd_hardware_set_soft_timer(32768 * BATTERY_ADC_MEAS_INTERVAL_MS / 1000, 
+                                      SOFT_TIMER_BATTERY_MEAS_HANDLER, false);
+  }  
 
-  GPIO_PinOutSet(BSP_LED1_PORT, BSP_LED1_PIN);  
+  IADC_command(IADC0, iadcCmdStartScan);  
 }
 
 /**************************************************************************//**
  * @brief terminate the IADC for battery measurement 
  *****************************************************************************/
-void terminateBatteryMeasurement(battery_measure_TypeDef measure_type)
+void terminateBatteryMeasurement(void)
 {
-  if (measure_type == MOTOR_BAT)
-  {
-    // removes the scheduled timer if set value to 0
-    gecko_cmd_hardware_set_soft_timer(0, SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER, false);
-    GPIO_PinOutClear(BSP_LED1_PORT, BSP_LED1_PIN);
-  }
+  // removes the scheduled timer if set value to 0
+  gecko_cmd_hardware_set_soft_timer(0, SOFT_TIMER_BATTERY_MEAS_HANDLER, false);
 
-  setBatteryADCCommand(iadcCmdStopScan);
+  IADC_command(IADC0, iadcCmdStopScan);
 }
 
 /**************************************************************************//**
- * @brief set IADC command  
+ * @brief terminate the IADC for motor battery measurement 
  *****************************************************************************/
-void setBatteryADCCommand(IADC_Cmd_t command)
+void terminateMotorBatteryMeasurement(void)
 {
-  IADC_command(IADC0, command);
+  // removes the scheduled timer if set value to 0
+  gecko_cmd_hardware_set_soft_timer(0, SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER, false);
+  //GPIO_PinOutClear(BSP_LED1_PORT, BSP_LED1_PIN);
+
+  IADC_command(IADC0, iadcCmdStopScan);
+}
+
+/**************************************************************************//**
+ * @brief trigger IADC Scan again  
+ *****************************************************************************/
+void triggerADCScanAgain(void)
+{
+  IADC_command(IADC0, iadcCmdStartScan);
 }
 
 /**************************************************************************//**
@@ -192,18 +201,19 @@ void IADC_IRQHandler(void)
     sample = IADC_pullScanFifoResult(IADC0);
 
     // collect door lock/unlock motor battery voltage profile
-    if (batteryMeasureType == MOTOR_BAT)
+    if (batteryMeasureType == MOTOR_BATTERY_ONLY)
     {
       if (sample.id == 1)
       {
-        motorADCBuffer[indexAdcSample++] = sample.data;
+        motorBatterySteps[indexAdcSample++] = sample.data;
       }
     }
 
     // Calculate input voltage:
     //  For single-ended the result range is 0 to +Vref, i.e.,
     //  for Vref = AVDD = 3.30V, 12 bits represents 3.30V full scale IADC range.
-    scanResult[sample.id] = sample.data * 3.3 / 0xFFF;
+    //scanResults[sample.id] = sample.data * 3.3 / 0xFFF;
+    batterySteps[sample.id] = sample.data;
   }
 
   // Start next IADC conversion

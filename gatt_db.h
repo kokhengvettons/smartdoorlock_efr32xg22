@@ -29,5 +29,6 @@ extern const struct bg_gattdb_def bg_gattdb_data;
 #define gattdb_door_alarm_status               36
 #define gattdb_ota_control                     40
 #define gattdb_battery_level                   43
+#define gattdb_battery_level_motor             46
 
 #endif

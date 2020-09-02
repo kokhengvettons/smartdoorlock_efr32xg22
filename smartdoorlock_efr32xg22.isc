@@ -1,5 +1,5 @@
 #ISD afv6
-# Simplicity Studio version: 5.18.5.202006060116-38
+# Simplicity Studio version: 5.18.7.202008130736-45
 
 # Application configuration
 stackId: com.silabs.sdk.stack.super
@@ -106,8 +106,13 @@ appPlugin: stack_bridge=false
     <informativeText>Abstract:  The Battery Service exposes the state of a battery within a device.  Summary:  The Battery Service exposes the Battery State and Battery Level of a single battery or set of batteries in a device.  </informativeText>
     <characteristic id="battery_level" name="Battery Level" sourceId="org.bluetooth.characteristic.battery_level" uuid="2A19">
       <informativeText>Abstract:  The current charge level of a battery. 100% represents fully charged while 0% represents fully discharged.  </informativeText>
-      <value length="3" type="hex" variable_length="false">0x000000</value>
+      <value length="1" type="hex" variable_length="false">0x00</value>
       <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="mandatory"/>
+    </characteristic>
+    <characteristic id="battery_level_motor" name="Battery_Level_Motor" sourceId="custom.type" uuid="db2130ae-82b5-4cf2-84c7-060b50e05c3e">
+      <informativeText>Custom characteristic</informativeText>
+      <value length="1" type="hex" variable_length="false">0x00</value>
+      <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
   </service>
 </gatt>

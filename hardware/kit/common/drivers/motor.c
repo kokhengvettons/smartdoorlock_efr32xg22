@@ -115,7 +115,7 @@ void triggerDoorLock(bool bLock)
   }
 
   // trigger motor battery measurement
-  triggerBatteryMeasurement(MOTOR_BAT);
+  triggerBatteryMeasurement(MOTOR_BATTERY_ONLY);
  };
 
 /**************************************************************************//**

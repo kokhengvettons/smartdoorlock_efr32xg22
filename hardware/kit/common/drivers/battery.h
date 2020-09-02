@@ -36,11 +36,6 @@ extern "C" {
 #define CLK_SRC_ADC_FREQ          40000000 // CLK_SRC_ADC
 #define CLK_ADC_FREQ              10000000 // CLK_ADC - 10MHz max in normal mode
 
-// Number of scan channels
-#define NUM_INPUTS                2
-
-#define NUM_ADC_SAMPLE            200
-
 // When changing GPIO port/pins below, make sure to change xBUSALLOC macro's
 // accordingly.
 #define IADC_INPUT_0_BUS          CDBUSALLOC
@@ -48,16 +43,24 @@ extern "C" {
 #define IADC_INPUT_1_BUS          CDBUSALLOC
 #define IADC_INPUT_1_BUSALLOC     GPIO_CDBUSALLOC_CDODD0_ADC0
 
-typedef enum {COIL_BAT = 0, MOTOR_BAT = 1} battery_measure_TypeDef;
+#define COIL_CELL_BATTERY_MIN     1.8
+#define COIL_CELL_BATTERY_MAX     3.3
+#define MOTOR_BATTERY_MIN         4.0
+#define MOTOR_BATTERY_MAX         6.0
+#define COIL_VOLT_DIV_SCALE_FACT  COIL_CELL_BATTERY_MAX / 1.2
+#define MOTOR_VOL_DIV_SCALE_FACT  MOTOR_BATTERY_MAX / 1.2
+
+typedef enum {ALL_TYPE_BATTER = 0, MOTOR_BATTERY_ONLY = 1} battery_measure_TypeDef;
 
 uint16_t indexAdcSample;
 
 void initGpioIAdc(void);
 void initIAdc(void);
 void initBatteryADCMeasurement(void);
-void setBatteryADCCommand(IADC_Cmd_t command);
+void triggerADCScanAgain(void);
+void terminateBatteryMeasurement(void);
+void terminateMotorBatteryMeasurement(void);
 void triggerBatteryMeasurement(battery_measure_TypeDef measure_type);
-void terminateBatteryMeasurement(battery_measure_TypeDef measure_type);
 
 #ifdef __cplusplus
 }

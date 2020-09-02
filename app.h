@@ -17,7 +17,6 @@
 #ifndef APP_H_
 #define APP_H_
 
-#include "battery.h"
 #include "gecko_configuration.h"
 
 /* DEBUG_LEVEL is used to enable/disable debug prints. Set DEBUG_LEVEL to 1 to enable debug prints */
@@ -57,12 +56,14 @@
 #define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    3
 #define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   4
 #define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   5
+#define SOFT_TIMER_BATTERY_MEAS_HANDLER     6
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
 #define DOOR_ALARM_DEFAULT_INTERVAL_MS      10000   //  10s
 #define DOOR_ALARM_OFF_INTERVAL_MS          200     //  200ms
-#define MOTOR_ADC_MEAS_INTERVAL_MS          10       // 10ms
+#define MOTOR_ADC_MEAS_INTERVAL_MS          10      //  10ms
+#define BATTERY_ADC_MEAS_INTERVAL_MS        60000   //  60s
 
 /***************************************************************************************************
  * Interrupt source
@@ -73,9 +74,20 @@
 
 #define PS_KEY_BASE                         0x4000
 
+/***************************************************************************************************
+ * Door status
+ **************************************************************************************************/
 typedef enum {DOOR_UNLOCK = 0, DOOR_LOCK = 1} door_lock_TypeDef;
 typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
 typedef enum {ALARM_OFF = 0, ALARM_ON = 1} door_alarm_status_TypedDef;
+
+/***************************************************************************************************
+ * IADC Battery measurement
+ **************************************************************************************************/
+#define NUM_ADC_SAMPLE                      200
+#define NUM_ADC_INPUT                       2
+uint16_t batterySteps[NUM_ADC_INPUT];
+uint16_t motorBatterySteps[NUM_ADC_SAMPLE];
 
 /* Main application */
 void appMain(const gecko_configuration_t *pconfig);
@@ -85,8 +97,7 @@ void evt_door_lock(uint8_t data[], uint16_t length);
 void evt_door_sensor_send_notification(void);
 void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
-void evt_motor_battery_measurement(battery_measure_TypeDef measure_type);
+void evt_motor_battery_measurement(void);
+void evt_update_battery_measurement(void);
 
-// void evt_set_leds(uint8_t data);
-// uint8_t evt_get_leds(void);
 #endif
