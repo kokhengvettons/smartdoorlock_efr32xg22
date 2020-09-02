@@ -22,6 +22,7 @@
 extern "C" {
 #endif
 
+#include "em_iadc.h"
 #include <stdbool.h>
 
 /*******************************************************************************
@@ -36,7 +37,9 @@ extern "C" {
 #define CLK_ADC_FREQ              10000000 // CLK_ADC - 10MHz max in normal mode
 
 // Number of scan channels
-#define NUM_INPUTS 2
+#define NUM_INPUTS                2
+
+#define NUM_ADC_SAMPLE            200
 
 // When changing GPIO port/pins below, make sure to change xBUSALLOC macro's
 // accordingly.
@@ -45,11 +48,16 @@ extern "C" {
 #define IADC_INPUT_1_BUS          CDBUSALLOC
 #define IADC_INPUT_1_BUSALLOC     GPIO_CDBUSALLOC_CDODD0_ADC0
 
+typedef enum {COIL_BAT = 0, MOTOR_BAT = 1} battery_measure_TypeDef;
+
+uint16_t indexAdcSample;
+
 void initGpioIAdc(void);
 void initIAdc(void);
-void enableIAdcBatteryMeasurement(void);
-void triggerBatteryMeasurement(bool bEnable);
-
+void initBatteryADCMeasurement(void);
+void setBatteryADCCommand(IADC_Cmd_t command);
+void triggerBatteryMeasurement(battery_measure_TypeDef measure_type);
+void terminateBatteryMeasurement(battery_measure_TypeDef measure_type);
 
 #ifdef __cplusplus
 }

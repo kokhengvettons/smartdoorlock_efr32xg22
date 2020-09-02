@@ -17,6 +17,7 @@
 #ifndef APP_H_
 #define APP_H_
 
+#include "battery.h"
 #include "gecko_configuration.h"
 
 /* DEBUG_LEVEL is used to enable/disable debug prints. Set DEBUG_LEVEL to 1 to enable debug prints */
@@ -55,11 +56,13 @@
 #define SOFT_TIMER_DOOR_BUTTON_HANDLER      2
 #define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    3
 #define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   4
+#define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   5
 
-#define DOOR_SENSOR_INTERVAL_MS             100     // 100ms
-#define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     // 500ms
-#define DOOR_ALARM_DEFAULT_INTERVAL_MS      10000   // 10s
-#define DOOR_ALARM_OFF_INTERVAL_MS          200     // 200ms
+#define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
+#define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
+#define DOOR_ALARM_DEFAULT_INTERVAL_MS      10000   //  10s
+#define DOOR_ALARM_OFF_INTERVAL_MS          200     //  200ms
+#define MOTOR_ADC_MEAS_INTERVAL_MS          10       // 10ms
 
 /***************************************************************************************************
  * Interrupt source
@@ -82,6 +85,7 @@ void evt_door_lock(uint8_t data[], uint16_t length);
 void evt_door_sensor_send_notification(void);
 void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
+void evt_motor_battery_measurement(battery_measure_TypeDef measure_type);
 
 // void evt_set_leds(uint8_t data);
 // uint8_t evt_get_leds(void);

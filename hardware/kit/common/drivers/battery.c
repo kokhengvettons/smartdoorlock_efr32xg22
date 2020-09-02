@@ -17,9 +17,14 @@
 #include "battery.h"
 #include "em_iadc.h"
 #include "em_cmu.h"
+#include "app.h"
+#include "native_gecko.h"
 
 volatile double scanResult[NUM_INPUTS];
-static bool InitializedIADC = false;
+
+uint16_t motorADCBuffer[NUM_ADC_SAMPLE];
+
+static battery_measure_TypeDef batteryMeasureType; 
 
 /**************************************************************************//**
  * @brief  GPIO initialization for battery measurement
@@ -63,7 +68,7 @@ void initIAdc (void)
   // Set the HFSCLK prescale value here
   init.srcClkPrescale = IADC_calcSrcClkPrescale(IADC0, CLK_SRC_ADC_FREQ, 0);
 
-  // 25ns per cycle, 40000 cycles make 100ms timer event
+  // 25ns per cycle, 40000 cycles make 1ms timer event
   init.timerCycles = 40000;
 
   // Configuration 0 is used by both scan and single conversions by default
@@ -78,7 +83,7 @@ void initIAdc (void)
                                              init.srcClkPrescale);
 
   // Scan initialization
-  initScan.triggerSelect = iadcTriggerSelTimer;
+  initScan.triggerSelect = iadcTriggerSelImmediate; // not using timer
   initScan.dataValidLevel = _IADC_SCANFIFOCFG_DVL_VALID2;
 
   // Tag FIFO entry with scan table entry id.
@@ -118,7 +123,7 @@ void initIAdc (void)
 /**************************************************************************//**
  * @brief Enable the IADC module for battery measurement 
  *****************************************************************************/
-void enableIAdcBatteryMeasurement(void)
+void initBatteryADCMeasurement(void)
 {
   // Initialize the GPIO
   initGpioIAdc();
@@ -126,22 +131,51 @@ void enableIAdcBatteryMeasurement(void)
   // Initialize the IADC
   initIAdc();
 
-  InitializedIADC = true;
+  // reset the ADC sample Index
+  indexAdcSample = 0;
 }
 
 /**************************************************************************//**
  * @brief trigger IADC for battery measurement 
  *****************************************************************************/
-void triggerBatteryMeasurement(bool bEnable)
+void triggerBatteryMeasurement(battery_measure_TypeDef measure_type)
 {
-  // make sure Init IADC before
-  if (InitializedIADC != true)
-    enableIAdcBatteryMeasurement();
+  batteryMeasureType = measure_type;
 
-  if (bEnable)
-    IADC_command(IADC0, iadcCmdStartScan);
-  else
-    IADC_command(IADC0, iadcCmdStopScan);
+  if (measure_type == MOTOR_BAT)
+  {
+    indexAdcSample = 0;
+    memset(motorADCBuffer, 0, sizeof(motorADCBuffer));
+    gecko_cmd_hardware_set_soft_timer(32768 * MOTOR_ADC_MEAS_INTERVAL_MS / 1000, 
+                                      SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER, false);
+  }    
+
+  setBatteryADCCommand(iadcCmdStartScan);
+
+  GPIO_PinOutSet(BSP_LED1_PORT, BSP_LED1_PIN);  
+}
+
+/**************************************************************************//**
+ * @brief terminate the IADC for battery measurement 
+ *****************************************************************************/
+void terminateBatteryMeasurement(battery_measure_TypeDef measure_type)
+{
+  if (measure_type == MOTOR_BAT)
+  {
+    // removes the scheduled timer if set value to 0
+    gecko_cmd_hardware_set_soft_timer(0, SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER, false);
+    GPIO_PinOutClear(BSP_LED1_PORT, BSP_LED1_PIN);
+  }
+
+  setBatteryADCCommand(iadcCmdStopScan);
+}
+
+/**************************************************************************//**
+ * @brief set IADC command  
+ *****************************************************************************/
+void setBatteryADCCommand(IADC_Cmd_t command)
+{
+  IADC_command(IADC0, command);
 }
 
 /**************************************************************************//**
@@ -156,6 +190,15 @@ void IADC_IRQHandler(void)
   {
     // Read data from the scan FIFO
     sample = IADC_pullScanFifoResult(IADC0);
+
+    // collect door lock/unlock motor battery voltage profile
+    if (batteryMeasureType == MOTOR_BAT)
+    {
+      if (sample.id == 1)
+      {
+        motorADCBuffer[indexAdcSample++] = sample.data;
+      }
+    }
 
     // Calculate input voltage:
     //  For single-ended the result range is 0 to +Vref, i.e.,

@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "motor.h"
+#include "battery.h"
 #include "app.h"
 #include "em_letimer.h"
 #include "em_gpio.h"
@@ -112,6 +113,9 @@ void triggerDoorLock(bool bLock)
 
     initLetimer(DUTY_CYCLE_UNLOCK);
   }
+
+  // trigger motor battery measurement
+  triggerBatteryMeasurement(MOTOR_BAT);
  };
 
 /**************************************************************************//**

@@ -274,6 +274,9 @@ void initUserApp()
   // Initialize motor PWM module
   initMotorPwm();
 
+  // Initialize measure battery module
+  initBatteryADCMeasurement();
+
   // initialize door access
   initDoorAccess();
 
@@ -298,9 +301,6 @@ int main(void)
   // Initialize the Temperature Sensor
   //Si7013_Detect(I2C0, SI7021_ADDR, NULL);
   #endif
-
-  // trigger IADC battery measurement
-  //triggerBatteryMeasurement(true);
 
   // Initialize user application
   initUserApp();

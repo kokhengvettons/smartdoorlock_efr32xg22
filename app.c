@@ -217,7 +217,7 @@ void appMain(const gecko_configuration_t *pconfig)
         switch(evt->data.evt_hardware_soft_timer.handle)
         {
           case SOFT_TIMER_MOTOR_PWM_HANDLER:
-            endDoorLock();            
+            endDoorLock();
             break;
           case SOFT_TIMER_DOOR_SENSOR_HANDLER:
             evt_door_sensor_send_notification();
@@ -230,6 +230,9 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case SOFT_TIMER_DOOR_ALARM_OFF_HANDLER:
             evt_door_alarm_send_notification(ALARM_OFF);
+            break;
+          case SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER:
+            evt_motor_battery_measurement(MOTOR_BAT);
             break;
           default:
             break;
@@ -424,4 +427,13 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
       }      
     }
   }
+}
+
+/* motor battery measurement */
+void evt_motor_battery_measurement(battery_measure_TypeDef measure_type)
+{
+  if (indexAdcSample >= NUM_ADC_SAMPLE)
+    terminateBatteryMeasurement(measure_type);
+  else              
+    setBatteryADCCommand(iadcCmdStartScan);
 }
