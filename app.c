@@ -92,12 +92,14 @@ void appMain(const gecko_configuration_t *pconfig)
         bootMessage(&(evt->data.evt_system_boot));
         printLog("boot event - starting advertising\r\n");
 
-        /* Set advertising parameters. 100ms advertisement interval.
-         * The first parameter is advertising set handle
-         * The next two parameters are minimum and maximum advertising interval, both in
-         * units of (milliseconds * 1.6).
-         * The last two parameters are duration and maxevents left as default. */
-        gecko_cmd_le_gap_set_advertise_timing(0, 160, 160, 0, 0);
+        /* set transmit power as 0 dBm*/
+        gecko_cmd_system_set_tx_power(0);
+
+        /* Set adv on 37, 38 channels */
+        gecko_cmd_le_gap_set_advertise_channel_map(0,3);
+
+        /* Set advertising parameters. 300ms advertisement interval.*/
+        gecko_cmd_le_gap_set_advertise_timing(0, 480, 480, 0, 0);
 
         // retrieve the attributes value from flash before start advertising
         evt_write_attribute_from_flash(gattdb_device_name);
@@ -111,6 +113,9 @@ void appMain(const gecko_configuration_t *pconfig)
       case gecko_evt_le_connection_opened_id:
 
         printLog("connection opened\r\n");
+
+	/* max interval: 200ms, latency: 2, supervision timeout: 6s */
+        gecko_cmd_le_connection_set_timing_parameters(evt->data.evt_le_connection_opened.connection, 120,160, 2, 600, 0, 0xffff);
         break;
 
       case gecko_evt_le_connection_closed_id:
