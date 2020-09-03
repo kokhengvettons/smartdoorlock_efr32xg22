@@ -50,7 +50,11 @@ extern "C" {
 #define COIL_VOLT_DIV_SCALE_FACT  COIL_CELL_BATTERY_MAX / 1.2
 #define MOTOR_VOL_DIV_SCALE_FACT  MOTOR_BATTERY_MAX / 1.2
 
-typedef enum {ALL_TYPE_BATTER = 0, MOTOR_BATTERY_ONLY = 1} battery_measure_TypeDef;
+#define BATTERY_LEVEL_LOW         25
+#define BATTERY_LEVEL_MID         50
+#define BATTERY_LEVEL_HIGH        75
+
+typedef enum {ALL_TYPE_BATTERY = 0, MOTOR_BATTERY_ONLY = 1} battery_measure_TypeDef;
 
 uint16_t indexAdcSample;
 

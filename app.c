@@ -68,7 +68,7 @@ void appMain(const gecko_configuration_t *pconfig)
   gecko_init(pconfig);
 
   /* measure battery level */
-  triggerBatteryMeasurement(ALL_TYPE_BATTER);
+  triggerBatteryMeasurement(ALL_TYPE_BATTERY);
 
   while (1) {
     /* Event pointer for handling events */
@@ -442,36 +442,41 @@ void evt_motor_battery_measurement(void)
 /* update the battery measurement value to batter level attribute */
 void evt_update_battery_measurement(void)
 {
-  uint8_t data = 0;
-  float voltage = 0;
+  uint8_t data;
+  float voltage;
+  float batteryPercentage;
   
   for (int idx = 0; idx < NUM_ADC_INPUT; idx++)
-  {    
+  {
     if (idx == 0)
     {
       // for cell coil battery
       voltage = (batterySteps[idx] * 3.3 / 0xFFF) * 1;
-      data = (uint8_t)((voltage - COIL_CELL_BATTERY_MIN / 
-              (COIL_CELL_BATTERY_MAX - COIL_CELL_BATTERY_MIN)) * 100);
+      batteryPercentage = (voltage - COIL_CELL_BATTERY_MIN)/(COIL_CELL_BATTERY_MAX - COIL_CELL_BATTERY_MIN) * 100;
 
+      data = (uint8_t) batteryPercentage;
       if (data > 100)
         data = 100;
       
       gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level, 0, 1, &data);
+
+      if (data <= BATTERY_LEVEL_LOW)
+        gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level, 1, &data);
     }
     else if (idx == 1)
     {
       // for dc motor battery
       voltage = (batterySteps[idx] * 3.3 / 0xFFF) * 1;
-      data = (uint8_t)((voltage - MOTOR_BATTERY_MIN / 
-              (MOTOR_BATTERY_MAX - MOTOR_BATTERY_MIN)) * 100);
+      batteryPercentage = (voltage - MOTOR_BATTERY_MIN)/(MOTOR_BATTERY_MAX - MOTOR_BATTERY_MIN) * 100;
       
+      data = (uint8_t) batteryPercentage;
       if (data > 100)
         data = 100;
 
       gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level_motor, 0, 1, &data);
+
+      if (data <= BATTERY_LEVEL_LOW)
+        gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_motor, 1, &data);
     }
-
-
   }
 }
