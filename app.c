@@ -96,7 +96,7 @@ void appMain(const gecko_configuration_t *pconfig)
         gecko_cmd_system_set_tx_power(0);
 
         /* Set adv on 37, 38 channels */
-        gecko_cmd_le_gap_set_advertise_channel_map(0,3);
+        gecko_cmd_le_gap_set_advertise_channel_map(0,7);
 
         /* Set advertising parameters. 300ms advertisement interval.*/
         gecko_cmd_le_gap_set_advertise_timing(0, 480, 480, 0, 0);
