@@ -240,8 +240,8 @@ void doorOpenButtonInterruptHandler(uint8_t pinNum)
 void initGpio(void)
 {
   // configure PD02 as LED0 and PD03 as LED1
-  GPIO_PinModeSet(BSP_LED0_PORT, BSP_LED0_PIN, gpioModePushPull, 0);
-  GPIO_PinModeSet(BSP_LED1_PORT, BSP_LED1_PIN, gpioModePushPull, 0);
+  //GPIO_PinModeSet(BSP_LED0_PORT, BSP_LED0_PIN, gpioModePushPull, 0);
+  //GPIO_PinModeSet(BSP_LED1_PORT, BSP_LED1_PIN, gpioModePushPull, 0);
 
   // configure PC02 as door sensor and PB00 as door open button
   GPIO_PinModeSet(gpioPortC, 2, gpioModeInputPullFilter, 1);
