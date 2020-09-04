@@ -20,6 +20,8 @@
 #include "app.h"
 #include "native_gecko.h"
 
+#define FEATURE_MEASURE_MOTOR_BATTERY_PROFILE             0
+
 static battery_measure_TypeDef batteryMeasureType; 
 
 /**************************************************************************//**
@@ -138,7 +140,7 @@ void triggerBatteryMeasurement(battery_measure_TypeDef measure_type)
 {
   batteryMeasureType = measure_type;
 
-  if (measure_type == MOTOR_BATTERY_ONLY)
+  if ((measure_type == MOTOR_BATTERY_ONLY) && (FEATURE_MEASURE_MOTOR_BATTERY_PROFILE == 1))
   {
     indexAdcSample = 0;
     memset(motorBatterySteps, 0, sizeof(motorBatterySteps));
@@ -201,7 +203,7 @@ void IADC_IRQHandler(void)
     sample = IADC_pullScanFifoResult(IADC0);
 
     // collect door lock/unlock motor battery voltage profile
-    if (batteryMeasureType == MOTOR_BATTERY_ONLY)
+    if ((batteryMeasureType == MOTOR_BATTERY_ONLY) && (FEATURE_MEASURE_MOTOR_BATTERY_PROFILE == 1))
     {
       if (sample.id == 1)
       {
