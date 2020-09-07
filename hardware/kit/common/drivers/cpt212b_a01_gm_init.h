@@ -64,16 +64,16 @@ typedef struct
   {0x00, 0x00, 0x00},                                                              /* reserved_0 */ \
   {0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C},        /* Active Threshold */ \
   {0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28},        /* Inactive Threshold */ \
-  {0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B, 0x4B},        /* Average Touch Delta */ \
-  {0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02},        /* Accumulation */ \
-  {0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06},        /* Gain */ \
-  {0x00, 0x14},                                                                    /* active mode period */ \
-  {0x00, 0xC8},                                                                    /* sleep mode period */ \
-  0x08,                                                                            /* button debounce */ \
+  {0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C},        /* Average Touch Delta */ \
+  {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01},        /* Accumulation */ \
+  {0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04},        /* Gain */ \
+  {0x00, 0x14},                                                                 /* active mode period */ \
+  {0x00, 0xC8},                                                                 /* sleep mode period */ \
+  0x04,                                                                            /* button debounce */ \
   {0xFF, 0x07},                                                                    /* active mode mask */ \
   {0xFF, 0x07},                                                                    /* sleep mode mask */ \
-  0x64,                                                                            /* counts before sleep */ \
-  0x01,                                                                            /* active mode scan type */ \
+  0x05,                                                                            /* counts before sleep */ \
+  0x00,                                                                            /* active mode scan type */ \
   {0x00, 0x00, 0x00, 0x00},                                                        /* reserved_1 */ \
   0x10,                                                                            /* buzzer output duration */ \
   0x64,                                                                            /* buzzer output frequency */ \
@@ -98,6 +98,6 @@ typedef struct
   {'C', 'S', '1', '1', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00'},            /* CS11 sensor string */ \
 }
 
-#define CPT212B_A01_GM_DEFAULT_CONFIG_CHECKSUM (0xD35A)
+#define CPT212B_A01_GM_DEFAULT_CONFIG_CHECKSUM (0x22CD)
 
 #endif // CPT212B_A01_GM_INIT_H__
