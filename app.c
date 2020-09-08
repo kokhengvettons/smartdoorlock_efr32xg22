@@ -227,6 +227,7 @@ void appMain(const gecko_configuration_t *pconfig)
             evt_door_sensor_send_notification();
             break;
           case SOFT_TIMER_DOOR_BUTTON_HANDLER:
+            GPIO_IntClear(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
             GPIO_IntEnable(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
             break;
           case SOFT_TIMER_DOOR_ALARM_ON_HANDLER:

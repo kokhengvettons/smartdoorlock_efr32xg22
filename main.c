@@ -206,7 +206,7 @@ void keypadEventInterruptHandler(uint8_t pinNum)
   }
 
   // clear the interrupt flags
-  GPIO_IntClear(GPIO_IntGet());
+  GPIO_IntClear(1 << INT_SOURCE_KEYPAD_EVENT);
 }
 
 /**
@@ -217,7 +217,7 @@ void doorSensorInterruptHandler(uint8_t pinNum)
   gecko_external_signal(EXT_SIGNAL_DOOR_SENSOR_FLAG);
 
   // clear the interrupt flags
-  GPIO_IntClear(GPIO_IntGet());
+  GPIO_IntClear(1 << INT_SOURCE_DOOR_SENSOR);
 }
 
 /**
@@ -228,7 +228,7 @@ void doorOpenButtonInterruptHandler(uint8_t pinNum)
   gecko_external_signal(EXT_SIGNAL_DOOR_BUTTON_FLAG);
 
   // clear the interrupt flags
-  GPIO_IntClear(GPIO_IntGet());
+  GPIO_IntClear(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
   
   // disable the interrupt to prevent button debouncing issue
   GPIO_IntDisable(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
