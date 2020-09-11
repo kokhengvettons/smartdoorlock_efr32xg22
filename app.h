@@ -84,6 +84,16 @@ typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
 typedef enum {ALARM_OFF = 0, ALARM_ON = 1} door_alarm_status_TypedDef;
 
 /***************************************************************************************************
+ * Special command
+ **************************************************************************************************/
+enum special_cmd_error_code
+{
+	special_cmd_success=0x00,
+	special_cmd_err_write_profile=0xF0,
+	special_cmd_unsupported_cmd=0xFE,
+	special_cmd_unknown_err=0xFF,
+};
+/***************************************************************************************************
  * IADC Battery measurement
  **************************************************************************************************/
 #define NUM_ADC_SAMPLE                      200
@@ -103,5 +113,6 @@ void evt_motor_battery_measurement(void);
 void evt_update_battery_measurement(void);
 void flash_keypad_configuration_profile(void);
 void factory_reset(void);
+void special_command_default_handler(void);
 
 #endif

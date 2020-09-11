@@ -460,6 +460,7 @@ void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_ev
     case 0x03: // hardware self testing
       break;
     default:
+      special_command_default_handler();
       break;
   }
 }
@@ -526,7 +527,7 @@ void factory_reset(void)
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_door_alarm_trigger_time, sizeof(alarm_trigger_time), alarm_trigger_time);
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_serial_number_string, sizeof(serial_num_string), serial_num_string);
 
-  uint8_t error_code = 0;
+  uint8_t error_code = special_cmd_success;
   gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &error_code);
 
   // add some delay to reset the device 
@@ -537,11 +538,18 @@ void factory_reset(void)
 void flash_keypad_configuration_profile(void)
 {
   errorcode_t error_code = initcpt212b(true);
-  uint8_t err_spec_cmd = 0;
+  uint8_t err_spec_cmd = special_cmd_success;
   if (error_code != bg_err_success)
   {
-      err_spec_cmd = 0xF0;
+      err_spec_cmd = special_cmd_err_write_profile;
   }
 
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_spec_cmd);
+}
+
+/* send unsupport command return code when received invalid special command  */
+void special_command_default_handler(void)
+{
+  uint8_t err_spec_cmd = special_cmd_unsupported_cmd;
   gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_spec_cmd);
 }
