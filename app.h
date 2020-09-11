@@ -50,14 +50,14 @@
 /***************************************************************************************************
  * Software timer
  **************************************************************************************************/
-#define SOFT_TIMER_MOTOR_PWM_HANDLER        0
-#define SOFT_TIMER_DOOR_SENSOR_HANDLER      1
-#define SOFT_TIMER_DOOR_BUTTON_HANDLER      2
-#define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    3
-#define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   4
-#define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   5
-#define SOFT_TIMER_BATTERY_MEAS_HANDLER     6
-#define SOFT_TIMER_FAC_RESET_HANDLER        7
+#define SOFT_TIMER_MOTOR_PWM_HANDLER        1
+#define SOFT_TIMER_DOOR_SENSOR_HANDLER      2
+#define SOFT_TIMER_DOOR_BUTTON_HANDLER      3
+#define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    4
+#define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   5
+#define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   6
+#define SOFT_TIMER_BATTERY_MEAS_HANDLER     7
+#define SOFT_TIMER_FAC_RESET_HANDLER        8
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
