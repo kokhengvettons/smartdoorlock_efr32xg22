@@ -101,6 +101,7 @@ void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
 void evt_motor_battery_measurement(void);
 void evt_update_battery_measurement(void);
+void flash_keypad_configuration_profile(void);
 void factory_reset(void);
 
 #endif

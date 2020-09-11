@@ -269,7 +269,7 @@ void initUserApp()
   USTIMER_Init();
 
   // Initialize the capacitive touch keypad
-  initcpt212b();
+  initcpt212b(false);
 
   // Initialize motor PWM module
   initMotorPwm();

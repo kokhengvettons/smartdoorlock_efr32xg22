@@ -34,13 +34,9 @@
 #include "i2cspm.h"
 #include "ustimer.h"
 #include "cpt212b_a01_gm_init.h"
-
 #include "stddef.h"
 
-#define FEATURE_FLASH_NEW_CONFIGURATION_PROFILE		0
-
-static uint8_t event_packet_counter; 
-
+static uint8_t event_packet_counter;
 
 /**************************************************************************//**
  * @brief
@@ -118,7 +114,7 @@ void cpt212b_SensorEnable(bool bEnable)
  * @return
  *   Return results
  *****************************************************************************/
-errorcode_t initcpt212b(void)
+errorcode_t initcpt212b(bool bEnableFlashNewPRofile)
 {
   errorcode_t err = bg_err_success;
 
@@ -127,9 +123,10 @@ errorcode_t initcpt212b(void)
   // packet counter set to 0 as starting send event packet
   event_packet_counter = 0;
 
-  #if FEATURE_FLASH_NEW_CONFIGURATION_PROFILE
+  if (bEnableFlashNewPRofile == true)
+  {
     err = flashNewConfigurationProfile();
-  #endif
+  }
   
   if (err == bg_err_success)
   {
@@ -186,7 +183,7 @@ errorcode_t flashNewConfigurationProfile(void)
     // step 2: Host sends config erase command, which erases the configuration profile.
     if ((err = cpt212b_ConfigurationErase(I2C0)) == bg_err_success)
     {
-      USTIMER_Delay(1000*50);
+      USTIMER_Delay(1000*200);
 
       // step 3: Host sends bytes 0-7 of configuration profile in a write config command,
       //         repeats the step until end of profile. 

@@ -108,7 +108,7 @@ void initKeypadInterrupt(void);
 void cpt212b_SensorReset(void);
 void cpt212b_SensorEnable(bool bEnable);
 void PacketCounterHandler(bool bReset);
-errorcode_t initcpt212b(void);
+errorcode_t initcpt212b(bool bEnableFlashNewPRofile);
 errorcode_t flashNewConfigurationProfile(void);
 errorcode_t writeConfigurationProfile(void);
 errorcode_t cpt212b_EnterSenseMode(I2C_TypeDef *i2c);

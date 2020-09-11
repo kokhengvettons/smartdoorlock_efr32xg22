@@ -23,11 +23,11 @@
 #include "bg_types.h"
 #include "native_gecko.h"
 #include "gatt_db.h"
-
 #include "app.h"
 #include "motor.h"
 #include "battery.h"
-
+#include "cpt212b.h"
+#include "bg_errorcodes.h"
 #include <stdbool.h>
 
 /* Flag for indicating DFU Reset must be performed */
@@ -455,7 +455,7 @@ void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_ev
       factory_reset();
       break;
     case 0x02: // flash keypad configuration profile
-
+      flash_keypad_configuration_profile();
       break;
     case 0x03: // hardware self testing
       break;
@@ -531,4 +531,17 @@ void factory_reset(void)
 
   // add some delay to reset the device 
   gecko_cmd_hardware_set_soft_timer(32768 * FACTORY_RESET_INTERVAL_MS / 1000, SOFT_TIMER_FAC_RESET_HANDLER, true);
+}
+
+/* overwrite keypad configuration profile */
+void flash_keypad_configuration_profile(void)
+{
+  errorcode_t error_code = initcpt212b(true);
+  uint8_t err_spec_cmd = 0;
+  if (error_code != bg_err_success)
+  {
+      err_spec_cmd = 0xF0;
+  }
+
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_spec_cmd);
 }
