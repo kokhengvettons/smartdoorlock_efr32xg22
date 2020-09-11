@@ -57,6 +57,7 @@
 #define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   4
 #define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   5
 #define SOFT_TIMER_BATTERY_MEAS_HANDLER     6
+#define SOFT_TIMER_FAC_RESET_HANDLER        7
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
@@ -64,6 +65,7 @@
 #define DOOR_ALARM_OFF_INTERVAL_MS          200     //  200ms
 #define MOTOR_ADC_MEAS_INTERVAL_MS          10      //  10ms
 #define BATTERY_ADC_MEAS_INTERVAL_MS        60000   //  60s
+#define FACTORY_RESET_INTERVAL_MS           2000    // 2s
 
 /***************************************************************************************************
  * Interrupt source
@@ -99,5 +101,6 @@ void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
 void evt_motor_battery_measurement(void);
 void evt_update_battery_measurement(void);
+void factory_reset(void);
 
 #endif

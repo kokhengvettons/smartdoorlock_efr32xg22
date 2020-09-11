@@ -40,6 +40,9 @@ const uint8_t door_open[4]            = {"OPEN"};
 const uint8_t door_closed[6]          = {"CLOSED"};
 const uint8_t door_alarm_on[2]        = {"ON"};
 const uint8_t door_alarm_off[3]       = {"OFF"};
+const uint8_t device_name[13]         = {"SmartDoorLock"};
+const uint8_t alarm_trigger_time[2]    = {0x0A, 0x00};
+const uint8_t serial_num_string[36]   = {"00000000-0000-0000-0000-000000000000"};
 
 static uint8_t door_lock_status       = DOOR_UNLOCK;
 static uint8_t door_status            = DOOR_OPEN;
@@ -53,6 +56,7 @@ static void evt_door_lock_send_read_response(struct gecko_msg_gatt_server_user_r
 static void evt_door_alarm_status_send_read_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt);
 static void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val);
 static void evt_write_attribute_from_flash(uint16_t attribute_id);
+static void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val);
 
 /* Main application */
 void appMain(const gecko_configuration_t *pconfig)
@@ -194,6 +198,9 @@ void appMain(const gecko_configuration_t *pconfig)
           case gattdb_door_alarm_trigger_time:
             evt_write_attribute(gattdb_door_alarm_trigger_time, &(evt->data.evt_gatt_server_attribute_value));
             break;
+          case gattdb_special_command:
+            evt_special_command_handler(&(evt->data.evt_gatt_server_attribute_value));
+            break;
           default:
             break;
         }
@@ -241,6 +248,9 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case SOFT_TIMER_BATTERY_MEAS_HANDLER:
             evt_update_battery_measurement();
+            break;
+          case SOFT_TIMER_FAC_RESET_HANDLER:
+            gecko_cmd_system_reset(0);
             break;
           default:
             break;
@@ -436,6 +446,24 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
   }
 }
 
+/* special command handler */
+void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val)
+{
+  switch (attr_val->value.data[0])
+  {
+    case 0x01: // factory reset
+      factory_reset();
+      break;
+    case 0x02: // flash keypad configuration profile
+
+      break;
+    case 0x03: // hardware self testing
+      break;
+    default:
+      break;
+  }
+}
+
 /* motor battery measurement */
 void evt_motor_battery_measurement(void)
 {
@@ -485,4 +513,22 @@ void evt_update_battery_measurement(void)
         gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_motor, 1, &data);
     }
   }
+}
+
+/* perform factory reset */
+void factory_reset(void)
+{
+  // Perform a factory reset by erasing PS storage.
+  gecko_cmd_flash_ps_erase_all();
+
+  // write default device name and alarm trigger time into PS storage.
+  gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_device_name, sizeof(device_name), device_name);
+  gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_door_alarm_trigger_time, sizeof(alarm_trigger_time), alarm_trigger_time);
+  gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_serial_number_string, sizeof(serial_num_string), serial_num_string);
+
+  uint8_t error_code = 0;
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &error_code);
+
+  // add some delay to reset the device 
+  gecko_cmd_hardware_set_soft_timer(32768 * FACTORY_RESET_INTERVAL_MS / 1000, SOFT_TIMER_FAC_RESET_HANDLER, true);
 }

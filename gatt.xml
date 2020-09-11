@@ -92,6 +92,13 @@
       <value length="3" type="user" variable_length="true"/>
       <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
+    
+    <!--Special Command-->
+    <characteristic id="special_command" name="Special Command" sourceId="custom.type" uuid="654870d0-4b8a-4362-bfa2-e7c2a2880181">
+      <informativeText>Custom characteristic</informativeText>
+      <value length="1" type="hex" variable_length="false"/>
+      <properties indicate="true" indicate_requirement="optional" write="true" write_requirement="optional"/>
+    </characteristic>
   </service>
   
   <!--Silicon Labs OTA-->
