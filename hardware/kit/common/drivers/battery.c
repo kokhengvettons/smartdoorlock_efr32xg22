@@ -186,6 +186,7 @@ void terminateMotorBatteryMeasurement(void)
  *****************************************************************************/
 void triggerADCScanAgain(void)
 {
+  memset(batterySteps, 0, sizeof(batterySteps));
   IADC_command(IADC0, iadcCmdStartScan);
 }
 

@@ -58,6 +58,7 @@
 #define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   6
 #define SOFT_TIMER_BATTERY_MEAS_HANDLER     7
 #define SOFT_TIMER_FAC_RESET_HANDLER        8
+#define SOFT_TIMER_SEND_NOTIF_HANDLER       9
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
@@ -65,6 +66,7 @@
 #define DOOR_ALARM_OFF_INTERVAL_MS          200     //  200ms
 #define MOTOR_ADC_MEAS_INTERVAL_MS          10      //  10ms
 #define BATTERY_ADC_MEAS_INTERVAL_MS        60000   //  60s
+#define BATTERY_SEND_NOTIF_INTERVAL_MS      1000    // 1s
 #define FACTORY_RESET_INTERVAL_MS           2000    // 2s
 
 /***************************************************************************************************
@@ -88,10 +90,13 @@ typedef enum {ALARM_OFF = 0, ALARM_ON = 1} door_alarm_status_TypedDef;
  **************************************************************************************************/
 enum special_cmd_error_code
 {
-	special_cmd_success=0x00,
-	special_cmd_err_write_profile=0xF0,
-	special_cmd_unsupported_cmd=0xFE,
-	special_cmd_unknown_err=0xFF,
+	special_cmd_success = 0x00,
+	special_cmd_err_write_profile = 0xF0,
+    special_cmd_err_hardware_keypad = 0xF1,
+    special_cmd_err_hardware_battery = 0xF2,
+    special_cmd_err_hardware_door_motor = 0xF3,
+	special_cmd_unsupported_cmd = 0xFE,
+	special_cmd_unknown_err = 0xFF,
 };
 /***************************************************************************************************
  * IADC Battery measurement
@@ -111,8 +116,13 @@ void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
 void evt_motor_battery_measurement(void);
 void evt_update_battery_measurement(void);
+void evt_send_notification_battery_level(void);
 void flash_keypad_configuration_profile(void);
 void factory_reset(void);
 void special_command_default_handler(void);
+void hardware_self_test_for_keypad(void);
+void hardware_self_test_for_battery(void);
+void hardware_self_test_dc_motor(void);
+uint8_t battery_measurement_test(void);
 
 #endif

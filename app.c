@@ -28,6 +28,7 @@
 #include "battery.h"
 #include "cpt212b.h"
 #include "bg_errorcodes.h"
+#include "ustimer.h"
 #include <stdbool.h>
 
 /* Flag for indicating DFU Reset must be performed */
@@ -48,6 +49,7 @@ static uint8_t door_lock_status       = DOOR_UNLOCK;
 static uint8_t door_status            = DOOR_OPEN;
 static uint8_t door_alarm_status      = ALARM_OFF;
 static uint32_t door_alarm_time_in_s  = DOOR_ALARM_DEFAULT_INTERVAL_MS / 1000;
+static uint8_t battery_level[NUM_ADC_INPUT];
 
 /* static function */
 static void bootMessage(struct gecko_msg_system_boot_evt_t *bootevt);
@@ -248,6 +250,9 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case SOFT_TIMER_BATTERY_MEAS_HANDLER:
             evt_update_battery_measurement();
+            break;
+          case SOFT_TIMER_SEND_NOTIF_HANDLER:
+            evt_send_notification_battery_level();
             break;
           case SOFT_TIMER_FAC_RESET_HANDLER:
             gecko_cmd_system_reset(0);
@@ -457,7 +462,12 @@ void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_ev
     case 0x02: // flash keypad configuration profile
       flash_keypad_configuration_profile();
       break;
-    case 0x03: // hardware self testing
+    case 0x03: // hardware self test for keypad
+      hardware_self_test_for_keypad();
+    case 0x04: // hardware self test for battery
+      hardware_self_test_for_battery();
+    case 0x05: // hardware self test for dc motor
+      hardware_self_test_dc_motor();
       break;
     default:
       special_command_default_handler();
@@ -477,43 +487,43 @@ void evt_motor_battery_measurement(void)
 /* update the battery measurement value to batter level attribute */
 void evt_update_battery_measurement(void)
 {
-  uint8_t data;
   float voltage;
   float batteryPercentage;
-  
-  for (int idx = 0; idx < NUM_ADC_INPUT; idx++)
+
+  // for cell coil battery measurement
+  voltage = (batterySteps[0] * 3.3 / 0xFFF) * 1;
+  batteryPercentage = (voltage - COIL_CELL_BATTERY_MIN)/(COIL_CELL_BATTERY_MAX - COIL_CELL_BATTERY_MIN) * 100;
+  batteryPercentage = batteryPercentage > 100 ? 100 : batteryPercentage;
+  battery_level[0] = (uint8_t) batteryPercentage;
+
+
+  // for dc motor battery measurement
+  voltage = (batterySteps[1] * 3.3 / 0xFFF) * 1;
+  batteryPercentage = (voltage - MOTOR_BATTERY_MIN)/(MOTOR_BATTERY_MAX - MOTOR_BATTERY_MIN) * 100;
+  batteryPercentage = batteryPercentage > 100 ? 100 : batteryPercentage;
+  battery_level[1] = (uint8_t) batteryPercentage;
+
+  gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level, 0, 1, &battery_level[0]);
+  gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level_motor, 0, 1, &battery_level[1]);
+
+  if (battery_level[0] < BATTERY_LEVEL_LOW)
   {
-    if (idx == 0)
-    {
-      // for cell coil battery
-      voltage = (batterySteps[idx] * 3.3 / 0xFFF) * 1;
-      batteryPercentage = (voltage - COIL_CELL_BATTERY_MIN)/(COIL_CELL_BATTERY_MAX - COIL_CELL_BATTERY_MIN) * 100;
-
-      data = (uint8_t) batteryPercentage;
-      if (data > 100)
-        data = 100;
-      
-      gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level, 0, 1, &data);
-
-      if (data <= BATTERY_LEVEL_LOW)
-        gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level, 1, &data);
-    }
-    else if (idx == 1)
-    {
-      // for dc motor battery
-      voltage = (batterySteps[idx] * 3.3 / 0xFFF) * 1;
-      batteryPercentage = (voltage - MOTOR_BATTERY_MIN)/(MOTOR_BATTERY_MAX - MOTOR_BATTERY_MIN) * 100;
-      
-      data = (uint8_t) batteryPercentage;
-      if (data > 100)
-        data = 100;
-
-      gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level_motor, 0, 1, &data);
-
-      if (data <= BATTERY_LEVEL_LOW)
-        gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_motor, 1, &data);
-    }
+    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level, 1, &battery_level[0]);
   }
+
+  // schedule 1 seconds delay for dc motor battery notification due to two notification can't send at same time
+  if (battery_level[1] < BATTERY_LEVEL_LOW)
+  {
+    gecko_cmd_hardware_set_soft_timer(32768 * BATTERY_SEND_NOTIF_INTERVAL_MS / 1000, SOFT_TIMER_SEND_NOTIF_HANDLER, true);
+  }
+
+  triggerADCScanAgain();
+}
+
+/* send notification for battery level when lower than battery threshold */
+void evt_send_notification_battery_level()
+{
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_motor, 1, &battery_level[1]);
 }
 
 /* perform factory reset */
@@ -537,19 +547,74 @@ void factory_reset(void)
 /* overwrite keypad configuration profile */
 void flash_keypad_configuration_profile(void)
 {
-  errorcode_t error_code = initcpt212b(true);
   uint8_t err_spec_cmd = special_cmd_success;
+
+  errorcode_t error_code = initcpt212b(true);  
   if (error_code != bg_err_success)
   {
-      err_spec_cmd = special_cmd_err_write_profile;
+    err_spec_cmd = special_cmd_err_write_profile;
   }
 
   gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_spec_cmd);
 }
 
-/* send unsupport command return code when received invalid special command  */
+/* send unsupported command return code when received invalid special command  */
 void special_command_default_handler(void)
 {
   uint8_t err_spec_cmd = special_cmd_unsupported_cmd;
   gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_spec_cmd);
+}
+
+/* perform hardware self test for keypad */
+void hardware_self_test_for_keypad(void)
+{
+  errorcode_t bg_err = bg_err_success;
+  uint8_t err_code = special_cmd_success;
+
+  if ((bg_err =initcpt212b(false)) != bg_err_success)
+  {
+    err_code = special_cmd_err_hardware_keypad;    
+  }
+
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_code);
+}
+
+/* perform hardware self test for battery */
+void hardware_self_test_for_battery()
+{
+  uint8_t err_code = battery_measurement_test();
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_code);
+}
+
+/* perform hardware self test for dc motor */
+void hardware_self_test_dc_motor()
+{
+  uint8_t err_code = special_cmd_success;
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_special_command, 1, &err_code);
+}
+
+/* hardware test for measure battery level */
+uint8_t battery_measurement_test(void)
+{
+  //terminate all the battery measurement 
+  terminateBatteryMeasurement();
+  terminateMotorBatteryMeasurement();
+  
+  triggerADCScanAgain();
+  USTIMER_Delay(2000);
+
+  // convert ADC steps into voltage
+  float coinCellBatInVolt = (batterySteps[0] * 3.3 / 0xFFF) * 1;
+  float motorBatInVolt = (batterySteps[1] * 3.3 / 0xFFF) * 1;
+
+  // resume the battery measurement
+  triggerBatteryMeasurement(ALL_TYPE_BATTERY);
+
+  if ((coinCellBatInVolt <= 0 && coinCellBatInVolt >= 3.6) ||
+      (motorBatInVolt <= 0 && motorBatInVolt >= 6.5))
+  {
+    return special_cmd_err_hardware_battery;
+  }
+
+  return special_cmd_success;
 }
