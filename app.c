@@ -464,8 +464,10 @@ void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_ev
       break;
     case 0x03: // hardware self test for keypad
       hardware_self_test_for_keypad();
+      break;
     case 0x04: // hardware self test for battery
       hardware_self_test_for_battery();
+      break;
     case 0x05: // hardware self test for dc motor
       hardware_self_test_dc_motor();
       break;
@@ -503,12 +505,12 @@ void evt_update_battery_measurement(void)
   batteryPercentage = batteryPercentage > 100 ? 100 : batteryPercentage;
   battery_level[1] = (uint8_t) batteryPercentage;
 
-  gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level, 0, 1, &battery_level[0]);
+  gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level_cell, 0, 1, &battery_level[0]);
   gecko_cmd_gatt_server_write_attribute_value(gattdb_battery_level_motor, 0, 1, &battery_level[1]);
 
   if (battery_level[0] < BATTERY_LEVEL_LOW)
   {
-    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level, 1, &battery_level[0]);
+    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_cell, 1, &battery_level[0]);
   }
 
   // schedule 1 seconds delay for dc motor battery notification due to two notification can't send at same time
