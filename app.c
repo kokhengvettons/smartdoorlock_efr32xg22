@@ -41,8 +41,9 @@ const uint8_t door_open[4]            = {"OPEN"};
 const uint8_t door_closed[6]          = {"CLOSED"};
 const uint8_t door_alarm_on[2]        = {"ON"};
 const uint8_t door_alarm_off[3]       = {"OFF"};
-const uint8_t device_name[13]         = {"SmartDoorLock"};
-const uint8_t alarm_trigger_time[2]    = {0x0A, 0x00};
+const uint8_t device_name[15]         = {"VettonsDoorLock"};
+const uint8_t manufact_name[13]       = {"SmartDoorLock"};
+const uint8_t alarm_trigger_time[2]   = {0x0A, 0x00};
 const uint8_t serial_num_string[36]   = {"00000000-0000-0000-0000-000000000000"};
 
 static uint8_t door_lock_status       = DOOR_UNLOCK;
@@ -109,6 +110,7 @@ void appMain(const gecko_configuration_t *pconfig)
 
         // retrieve the attributes value from flash before start advertising
         evt_write_attribute_from_flash(gattdb_device_name);
+        evt_write_attribute_from_flash(gattdb_manufacturer_name_string);
         evt_write_attribute_from_flash(gattdb_serial_number_string);
         evt_write_attribute_from_flash(gattdb_door_alarm_trigger_time);
 
@@ -193,6 +195,9 @@ void appMain(const gecko_configuration_t *pconfig)
         {
           case gattdb_device_name:
             evt_write_attribute(gattdb_device_name, &(evt->data.evt_gatt_server_attribute_value));
+            break;
+          case gattdb_manufacturer_name_string:
+            evt_write_attribute(gattdb_manufacturer_name_string, &(evt->data.evt_gatt_server_attribute_value));
             break;
           case gattdb_serial_number_string:
             evt_write_attribute(gattdb_serial_number_string, &(evt->data.evt_gatt_server_attribute_value));
@@ -536,6 +541,7 @@ void factory_reset(void)
 
   // write default device name and alarm trigger time into PS storage.
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_device_name, sizeof(device_name), device_name);
+  gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_manufacturer_name_string, sizeof(manufact_name), manufact_name);
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_door_alarm_trigger_time, sizeof(alarm_trigger_time), alarm_trigger_time);
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_serial_number_string, sizeof(serial_num_string), serial_num_string);
 

@@ -9,7 +9,7 @@
     <!--Device Name-->
     <characteristic id="device_name" name="Device Name" sourceId="org.bluetooth.characteristic.gap.device_name" uuid="2A00">
       <informativeText/>
-      <value length="13" type="utf-8" variable_length="true">SmartDoorLock</value>
+      <value length="15" type="utf-8" variable_length="true">VettonsDoorLock</value>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
@@ -44,6 +44,13 @@
       <informativeText>Summary:  The value of this characteristic is a UTF-8 string representing the firmware revision for the firmware within the device.  </informativeText>
       <value length="8" type="utf-8" variable_length="false">v1.00.00</value>
       <properties read="true" read_requirement="optional"/>
+    </characteristic>
+    
+    <!--Manufacturer Name String-->
+    <characteristic id="manufacturer_name_string" name="Manufacturer Name String" sourceId="org.bluetooth.characteristic.manufacturer_name_string" uuid="2A29">
+      <informativeText>Abstract:  The value of this characteristic is a UTF-8 string representing the name of the manufacturer of the device.  </informativeText>
+      <value length="13" type="utf-8" variable_length="true">SmartDoorLock</value>
+      <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
     <!--Serial Number String-->
