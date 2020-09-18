@@ -444,14 +444,18 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
 
     if (attribute_id == gattdb_door_alarm_trigger_time)
     {
+      // in case user enter in less than 2 bytes value
+      uint16_t time_in_s = 0;
       if (pResp->value.len == 2)
-      {
-        door_alarm_time_in_s  = (pResp->value.data[1] << 8) + pResp->value.data[0];
-      }
+        time_in_s = (pResp->value.data[1] << 8) + pResp->value.data[0];
       else
-      {
+        time_in_s = pResp->value.data[0];
+      
+      // make sure won't exceed 65535 or equal to 0 seconds 
+      if (time_in_s == 0 || time_in_s >= 65535)
         door_alarm_time_in_s = DOOR_ALARM_DEFAULT_INTERVAL_MS / 1000;
-      }      
+      else
+        door_alarm_time_in_s  = time_in_s;
     }
   }
 }
