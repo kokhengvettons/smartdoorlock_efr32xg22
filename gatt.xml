@@ -93,11 +93,11 @@
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
-    <!--Door Alarm Status-->
-    <characteristic id="door_alarm_status" name="Door Alarm Status" sourceId="custom.type" uuid="6a8612e1-030f-41dc-9dd3-7ac3b3adb1c7">
+    <!--Enable Auto Door Lock-->
+    <characteristic id="enable_auto_door_lock" name="Enable Auto Door Lock" sourceId="custom.type" uuid="6a8612e1-030f-41dc-9dd3-7ac3b3adb1c7">
       <informativeText>Custom characteristic</informativeText>
-      <value length="3" type="user" variable_length="true"/>
-      <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
+      <value length="1" type="hex" variable_length="true">0x00</value>
+      <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
     <!--Special Command-->

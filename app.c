@@ -39,16 +39,14 @@ const uint8_t doorLock[4]             = {"LOCK"};
 const uint8_t doorUnlock[6]           = {"UNLOCK"};
 const uint8_t door_open[4]            = {"OPEN"};
 const uint8_t door_closed[6]          = {"CLOSED"};
-const uint8_t door_alarm_on[2]        = {"ON"};
-const uint8_t door_alarm_off[3]       = {"OFF"};
 const uint8_t device_name[15]         = {"VettonsDoorLock"};
 const uint8_t manufact_name[13]       = {"SmartDoorLock"};
-const uint8_t auto_lock_time[2]   = {0x3C, 0x00};
+const uint8_t auto_lock_time[2]       = {0x3C, 0x00};
 const uint8_t serial_num_string[36]   = {"00000000-0000-0000-0000-000000000000"};
 
 static uint8_t door_lock_status           = DOOR_UNLOCK;
 static uint8_t door_status                = DOOR_OPEN;
-static uint8_t door_alarm_status          = ALARM_OFF;
+static uint8_t enable_auto_door_lock      = DISABLE_AUTO_LOCK;
 static uint32_t door_auto_lock_time_in_s  = DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS / 1000;
 static uint8_t battery_level[NUM_ADC_INPUT];
 
@@ -56,7 +54,6 @@ static uint8_t battery_level[NUM_ADC_INPUT];
 static void bootMessage(struct gecko_msg_system_boot_evt_t *bootevt);
 static void evt_door_sensor_send_read_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt);
 static void evt_door_lock_send_read_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt);
-static void evt_door_alarm_status_send_read_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt);
 static void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val);
 static void evt_write_attribute_from_flash(uint16_t attribute_id);
 static void evt_special_command_handler(struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val);
@@ -113,6 +110,7 @@ void appMain(const gecko_configuration_t *pconfig)
         evt_write_attribute_from_flash(gattdb_manufacturer_name_string);
         evt_write_attribute_from_flash(gattdb_serial_number_string);
         evt_write_attribute_from_flash(gattdb_door_auto_lock_time);
+        evt_write_attribute_from_flash(gattdb_enable_auto_door_lock);
 
         /* Start general advertising and enable connections. */
         gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
@@ -182,9 +180,6 @@ void appMain(const gecko_configuration_t *pconfig)
           case gattdb_door_status:
             evt_door_sensor_send_read_response(&(evt->data.evt_gatt_server_user_read_request));
             break;
-          case gattdb_door_alarm_status:
-            evt_door_alarm_status_send_read_response(&(evt->data.evt_gatt_server_user_read_request));
-            break;
           default:
             break;
         }
@@ -204,6 +199,9 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case gattdb_door_auto_lock_time:
             evt_write_attribute(gattdb_door_auto_lock_time, &(evt->data.evt_gatt_server_attribute_value));
+            break;
+          case gattdb_enable_auto_door_lock:
+            evt_write_attribute(gattdb_enable_auto_door_lock, &(evt->data.evt_gatt_server_attribute_value));
             break;
           case gattdb_special_command:
             evt_special_command_handler(&(evt->data.evt_gatt_server_attribute_value));
@@ -244,12 +242,6 @@ void appMain(const gecko_configuration_t *pconfig)
             GPIO_IntClear(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
             GPIO_IntEnable(1 << INT_SOURCE_DOOR_OPEN_BUTTON);
             break;
-          case SOFT_TIMER_DOOR_ALARM_ON_HANDLER:
-            evt_door_alarm_send_notification(ALARM_ON);
-            break;
-          case SOFT_TIMER_DOOR_ALARM_OFF_HANDLER:
-            evt_door_alarm_send_notification(ALARM_OFF);
-            break;
           case SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER:
             evt_motor_battery_measurement();
             break;
@@ -261,6 +253,14 @@ void appMain(const gecko_configuration_t *pconfig)
             break;
           case SOFT_TIMER_FAC_RESET_HANDLER:
             gecko_cmd_system_reset(0);
+            break;
+          case SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER:
+            if (door_lock_status == DOOR_UNLOCK)
+            {
+              triggerDoorLock(true);
+              door_lock_status = DOOR_LOCK;
+              gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_lock, sizeof(doorLock), doorLock);
+            }
             break;
           default:
             break;
@@ -308,6 +308,10 @@ void evt_door_lock(uint8_t data[], uint16_t length)
     {
       triggerDoorLock(false);
       door_lock_status = DOOR_UNLOCK;
+
+      // trigger auto door lock timer
+      if (enable_auto_door_lock == ENABLE_AUTO_LOCK)
+        gecko_cmd_hardware_set_soft_timer(32768 * door_auto_lock_time_in_s, SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER, true);
     }
   }
 }
@@ -326,6 +330,10 @@ void evt_door_button_ext_signal(void)
     triggerDoorLock(false);
     door_lock_status = DOOR_UNLOCK;
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF,gattdb_door_lock, sizeof(doorUnlock), doorUnlock);
+
+    // trigger auto door lock timer
+    if (enable_auto_door_lock == ENABLE_AUTO_LOCK)
+      gecko_cmd_hardware_set_soft_timer(32768 * door_auto_lock_time_in_s, SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER, true);
   }
 }
 
@@ -337,33 +345,10 @@ void evt_door_sensor_send_notification(void)
   if (door_status == DOOR_OPEN)
   {
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_status, sizeof(door_open), door_open);
-
-    // when door open then trigger the door alarm timer 
-    gecko_cmd_hardware_set_soft_timer(32768 * door_auto_lock_time_in_s, SOFT_TIMER_DOOR_ALARM_ON_HANDLER, true);
   }
   else
   {
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_status, sizeof(door_closed), door_closed);
-
-    // when detected close door event happened, send an notification to outside world
-    gecko_cmd_hardware_set_soft_timer(32768 * DOOR_ALARM_OFF_INTERVAL_MS / 1000, SOFT_TIMER_DOOR_ALARM_OFF_HANDLER, true);
-  }
-}
-
-/* Send an notification/indications to remote GATT client when triggered door alarm*/
-void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status)
-{
-  door_alarm_status = alarm_status;
-
-  if (alarm_status == ALARM_ON)
-  {
-    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_alarm_status, sizeof(door_alarm_on), door_alarm_on);
-    //TODO: Turn on Buzzer
-  }
-  else
-  {
-    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_alarm_status, sizeof(door_alarm_off), door_alarm_off);
-    //TODO: Turn off Buzzer
   }
 }
 
@@ -399,21 +384,6 @@ void evt_door_lock_send_read_response(struct gecko_msg_gatt_server_user_read_req
   }
 }
 
-/* Send an read response to remote GATT client for door alarm status*/
-void evt_door_alarm_status_send_read_response(struct gecko_msg_gatt_server_user_read_request_evt_t* readReqevt)
-{
-  if (door_alarm_status == ALARM_ON)
-  {
-    gecko_cmd_gatt_server_send_user_read_response(readReqevt->connection, gattdb_door_lock, bg_err_success, 
-                                                  sizeof(door_alarm_on), door_alarm_on);
-  }
-  else
-  {
-    gecko_cmd_gatt_server_send_user_read_response(readReqevt->connection, gattdb_door_lock, bg_err_success, 
-                                                  sizeof(door_alarm_off), door_alarm_off);    
-  }  
-}
-
 /* Store attribute value into flash by specified PS key */
 void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_attribute_value_evt_t* attr_val)
 {
@@ -434,6 +404,9 @@ void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_att
       else
         door_auto_lock_time_in_s  = time_in_s;     
   }
+
+  if (attribute_id == gattdb_enable_auto_door_lock)
+    enable_auto_door_lock = attr_val->value.data[0];
 }
 
 /* Read attribute value from flash then write the attribute */
@@ -450,15 +423,13 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
       // in case user enter in less than 2 bytes value
       uint16_t time_in_s = 0;
       if (pResp->value.len == 2)
-        time_in_s = (pResp->value.data[1] << 8) + pResp->value.data[0];
+        door_auto_lock_time_in_s = (pResp->value.data[1] << 8) + pResp->value.data[0];
       else
-        time_in_s = pResp->value.data[0];
-
-      if (time_in_s <= MIN_DOOR_AUTO_LOCK_IN_S || time_in_s >= MAX_DOOR_AUTO_LOCK_IN_S)
-        door_auto_lock_time_in_s = DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS / 1000;
-      else
-        door_auto_lock_time_in_s  = time_in_s;
+        door_auto_lock_time_in_s = pResp->value.data[0];
     }
+
+    if (attribute_id == gattdb_enable_auto_door_lock)
+      enable_auto_door_lock = pResp->value.data[0];
   }
 }
 

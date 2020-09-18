@@ -53,8 +53,7 @@
 #define SOFT_TIMER_MOTOR_PWM_HANDLER        1
 #define SOFT_TIMER_DOOR_SENSOR_HANDLER      2
 #define SOFT_TIMER_DOOR_BUTTON_HANDLER      3
-#define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    4
-#define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   5
+#define SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER   4
 #define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   6
 #define SOFT_TIMER_BATTERY_MEAS_HANDLER     7
 #define SOFT_TIMER_FAC_RESET_HANDLER        8
@@ -85,7 +84,7 @@
  **************************************************************************************************/
 typedef enum {DOOR_UNLOCK = 0, DOOR_LOCK = 1} door_lock_TypeDef;
 typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
-typedef enum {ALARM_OFF = 0, ALARM_ON = 1} door_alarm_status_TypedDef;
+typedef enum {DISABLE_AUTO_LOCK = 0x00, ENABLE_AUTO_LOCK = 0x01} enable_auto_lock_TypeDef;
 
 /***************************************************************************************************
  * Special command
@@ -114,7 +113,6 @@ void initMainBoardGPIO(void);
 
 void evt_door_lock(uint8_t data[], uint16_t length);
 void evt_door_sensor_send_notification(void);
-void evt_door_alarm_send_notification(door_alarm_status_TypedDef alarm_status);
 void evt_door_button_ext_signal(void);
 void evt_motor_battery_measurement(void);
 void evt_update_battery_measurement(void);

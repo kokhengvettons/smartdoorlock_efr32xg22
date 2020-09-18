@@ -93,10 +93,10 @@ appPlugin: stack_bridge=false
       <value length="2" type="hex" variable_length="false">0x003C</value>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
-    <characteristic id="door_alarm_status" name="Door Alarm Status" sourceId="custom.type" uuid="6a8612e1-030f-41dc-9dd3-7ac3b3adb1c7">
+    <characteristic id="enable_auto_door_lock" name="Enable Auto Door Lock" sourceId="custom.type" uuid="6a8612e1-030f-41dc-9dd3-7ac3b3adb1c7">
       <informativeText>Custom characteristic</informativeText>
-      <value length="3" type="user" variable_length="true"/>
-      <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
+      <value length="1" type="hex" variable_length="true">0x00</value>
+      <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     <characteristic id="special_command" name="Special Command" sourceId="custom.type" uuid="654870d0-4b8a-4362-bfa2-e7c2a2880181">
       <informativeText>Custom characteristic</informativeText>
