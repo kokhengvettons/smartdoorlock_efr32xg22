@@ -257,9 +257,12 @@ void appMain(const gecko_configuration_t *pconfig)
           case SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER:
             if (door_lock_status == DOOR_UNLOCK)
             {
-              triggerDoorLock(true);
-              door_lock_status = DOOR_LOCK;
-              gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_lock, sizeof(doorLock), doorLock);
+              if ((door_status = GPIO_PinInGet(gpioPortC, 2)) == DOOR_CLOSED)
+              {
+                triggerDoorLock(true);
+                door_lock_status = DOOR_LOCK;
+                gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_lock, sizeof(doorLock), doorLock);
+              }
             }
             break;
           default:
@@ -349,6 +352,10 @@ void evt_door_sensor_send_notification(void)
   else
   {
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_status, sizeof(door_closed), door_closed);
+
+    // trigger auto door lock timer
+    if (enable_auto_door_lock == ENABLE_AUTO_LOCK)
+      gecko_cmd_hardware_set_soft_timer(32768 * door_auto_lock_time_in_s, SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER, true);
   }
 }
 
@@ -421,7 +428,6 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
     if (attribute_id == gattdb_door_auto_lock_time)
     {
       // in case user enter in less than 2 bytes value
-      uint16_t time_in_s = 0;
       if (pResp->value.len == 2)
         door_auto_lock_time_in_s = (pResp->value.data[1] << 8) + pResp->value.data[0];
       else
