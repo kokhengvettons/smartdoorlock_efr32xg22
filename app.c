@@ -43,13 +43,13 @@ const uint8_t door_alarm_on[2]        = {"ON"};
 const uint8_t door_alarm_off[3]       = {"OFF"};
 const uint8_t device_name[15]         = {"VettonsDoorLock"};
 const uint8_t manufact_name[13]       = {"SmartDoorLock"};
-const uint8_t alarm_trigger_time[2]   = {0x0A, 0x00};
+const uint8_t auto_lock_time[2]   = {0x3C, 0x00};
 const uint8_t serial_num_string[36]   = {"00000000-0000-0000-0000-000000000000"};
 
-static uint8_t door_lock_status       = DOOR_UNLOCK;
-static uint8_t door_status            = DOOR_OPEN;
-static uint8_t door_alarm_status      = ALARM_OFF;
-static uint32_t door_alarm_time_in_s  = DOOR_ALARM_DEFAULT_INTERVAL_MS / 1000;
+static uint8_t door_lock_status           = DOOR_UNLOCK;
+static uint8_t door_status                = DOOR_OPEN;
+static uint8_t door_alarm_status          = ALARM_OFF;
+static uint32_t door_auto_lock_time_in_s  = DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS / 1000;
 static uint8_t battery_level[NUM_ADC_INPUT];
 
 /* static function */
@@ -112,7 +112,7 @@ void appMain(const gecko_configuration_t *pconfig)
         evt_write_attribute_from_flash(gattdb_device_name);
         evt_write_attribute_from_flash(gattdb_manufacturer_name_string);
         evt_write_attribute_from_flash(gattdb_serial_number_string);
-        evt_write_attribute_from_flash(gattdb_door_alarm_trigger_time);
+        evt_write_attribute_from_flash(gattdb_door_auto_lock_time);
 
         /* Start general advertising and enable connections. */
         gecko_cmd_le_gap_start_advertising(0, le_gap_general_discoverable, le_gap_connectable_scannable);
@@ -202,8 +202,8 @@ void appMain(const gecko_configuration_t *pconfig)
           case gattdb_serial_number_string:
             evt_write_attribute(gattdb_serial_number_string, &(evt->data.evt_gatt_server_attribute_value));
             break;
-          case gattdb_door_alarm_trigger_time:
-            evt_write_attribute(gattdb_door_alarm_trigger_time, &(evt->data.evt_gatt_server_attribute_value));
+          case gattdb_door_auto_lock_time:
+            evt_write_attribute(gattdb_door_auto_lock_time, &(evt->data.evt_gatt_server_attribute_value));
             break;
           case gattdb_special_command:
             evt_special_command_handler(&(evt->data.evt_gatt_server_attribute_value));
@@ -339,7 +339,7 @@ void evt_door_sensor_send_notification(void)
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_status, sizeof(door_open), door_open);
 
     // when door open then trigger the door alarm timer 
-    gecko_cmd_hardware_set_soft_timer(32768 * door_alarm_time_in_s, SOFT_TIMER_DOOR_ALARM_ON_HANDLER, true);
+    gecko_cmd_hardware_set_soft_timer(32768 * door_auto_lock_time_in_s, SOFT_TIMER_DOOR_ALARM_ON_HANDLER, true);
   }
   else
   {
@@ -420,16 +420,19 @@ void evt_write_attribute(uint16_t attribute_id, struct gecko_msg_gatt_server_att
   gecko_cmd_flash_ps_save(PS_KEY_BASE + attribute_id, attr_val->value.len, attr_val->value.data);
   gecko_cmd_gatt_server_write_attribute_value(attribute_id, 0, attr_val->value.len, attr_val->value.data);
 
-  if (attribute_id == gattdb_door_alarm_trigger_time)
+  if (attribute_id == gattdb_door_auto_lock_time)
   {
-    if (attr_val->value.len == 2)
-    {
-      door_alarm_time_in_s  = (attr_val->value.data[1] << 8) + attr_val->value.data[0];
-    }
-    else
-    {
-      door_alarm_time_in_s = DOOR_ALARM_DEFAULT_INTERVAL_MS / 1000;
-    }      
+      // in case user enter in less than 2 bytes value
+      uint16_t time_in_s = 0;
+      if (attr_val->value.len == 2)
+        time_in_s = (attr_val->value.data[1] << 8) + attr_val->value.data[0];
+      else
+        time_in_s = attr_val->value.data[0];
+
+      if (time_in_s <= MIN_DOOR_AUTO_LOCK_IN_S || time_in_s >= MAX_DOOR_AUTO_LOCK_IN_S)
+        door_auto_lock_time_in_s = DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS / 1000;
+      else
+        door_auto_lock_time_in_s  = time_in_s;     
   }
 }
 
@@ -442,7 +445,7 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
   {
     gecko_cmd_gatt_server_write_attribute_value(attribute_id, 0, pResp->value.len, pResp->value.data);
 
-    if (attribute_id == gattdb_door_alarm_trigger_time)
+    if (attribute_id == gattdb_door_auto_lock_time)
     {
       // in case user enter in less than 2 bytes value
       uint16_t time_in_s = 0;
@@ -450,12 +453,11 @@ void evt_write_attribute_from_flash(uint16_t attribute_id)
         time_in_s = (pResp->value.data[1] << 8) + pResp->value.data[0];
       else
         time_in_s = pResp->value.data[0];
-      
-      // make sure won't exceed 65535 or equal to 0 seconds 
-      if (time_in_s == 0 || time_in_s >= 65535)
-        door_alarm_time_in_s = DOOR_ALARM_DEFAULT_INTERVAL_MS / 1000;
+
+      if (time_in_s <= MIN_DOOR_AUTO_LOCK_IN_S || time_in_s >= MAX_DOOR_AUTO_LOCK_IN_S)
+        door_auto_lock_time_in_s = DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS / 1000;
       else
-        door_alarm_time_in_s  = time_in_s;
+        door_auto_lock_time_in_s  = time_in_s;
     }
   }
 }
@@ -546,7 +548,7 @@ void factory_reset(void)
   // write default device name and alarm trigger time into PS storage.
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_device_name, sizeof(device_name), device_name);
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_manufacturer_name_string, sizeof(manufact_name), manufact_name);
-  gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_door_alarm_trigger_time, sizeof(alarm_trigger_time), alarm_trigger_time);
+  gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_door_auto_lock_time, sizeof(auto_lock_time), auto_lock_time);
   gecko_cmd_flash_ps_save(PS_KEY_BASE + gattdb_serial_number_string, sizeof(serial_num_string), serial_num_string);
 
   uint8_t error_code = special_cmd_success;

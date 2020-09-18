@@ -62,13 +62,15 @@
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
-#define DOOR_ALARM_DEFAULT_INTERVAL_MS      10000   //  10s
+#define DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS  60000   //  60s
 #define DOOR_ALARM_OFF_INTERVAL_MS          200     //  200ms
 #define MOTOR_ADC_MEAS_INTERVAL_MS          10      //  10ms
 #define BATTERY_ADC_MEAS_INTERVAL_MS        60000   //  60s
 #define BATTERY_SEND_NOTIF_INTERVAL_MS      1000    // 1s
 #define FACTORY_RESET_INTERVAL_MS           2000    // 2s
 
+#define MAX_DOOR_AUTO_LOCK_IN_S             300     // 300
+#define MIN_DOOR_AUTO_LOCK_IN_S             10      // 10s
 /***************************************************************************************************
  * Interrupt source
  **************************************************************************************************/

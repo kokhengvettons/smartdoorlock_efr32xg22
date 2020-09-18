@@ -88,9 +88,9 @@ appPlugin: stack_bridge=false
       <value length="6" type="hex" variable_length="false">0x00</value>
       <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
-    <characteristic id="door_alarm_trigger_time" name="Door Alarm Trigger Time" sourceId="custom.type" uuid="16228604-0b64-4018-9fd0-d54b79858a44">
+    <characteristic id="door_auto_lock_time" name="Door Auto Lock Time" sourceId="custom.type" uuid="16228604-0b64-4018-9fd0-d54b79858a44">
       <informativeText>Custom characteristic</informativeText>
-      <value length="2" type="hex" variable_length="false">10</value>
+      <value length="2" type="hex" variable_length="false">0x003C</value>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     <characteristic id="door_alarm_status" name="Door Alarm Status" sourceId="custom.type" uuid="6a8612e1-030f-41dc-9dd3-7ac3b3adb1c7">

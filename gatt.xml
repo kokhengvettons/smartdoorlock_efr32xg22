@@ -86,10 +86,10 @@
       <properties indicate="true" indicate_requirement="optional" read="true" read_requirement="optional"/>
     </characteristic>
     
-    <!--Door Alarm Trigger Time-->
-    <characteristic id="door_alarm_trigger_time" name="Door Alarm Trigger Time" sourceId="custom.type" uuid="16228604-0b64-4018-9fd0-d54b79858a44">
+    <!--Door Auto Lock Time-->
+    <characteristic id="door_auto_lock_time" name="Door Auto Lock Time" sourceId="custom.type" uuid="16228604-0b64-4018-9fd0-d54b79858a44">
       <informativeText>Custom characteristic</informativeText>
-      <value length="2" type="hex" variable_length="false">10</value>
+      <value length="2" type="hex" variable_length="false">0x003C</value>
       <properties read="true" read_requirement="optional" write="true" write_requirement="optional"/>
     </characteristic>
     
