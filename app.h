@@ -54,6 +54,7 @@
 #define SOFT_TIMER_DOOR_SENSOR_HANDLER      2
 #define SOFT_TIMER_DOOR_BUTTON_HANDLER      3
 #define SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER   4
+#define SOFT_TIMER_SENSOR_ALARM_HANDLER     5
 #define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   6
 #define SOFT_TIMER_BATTERY_MEAS_HANDLER     7
 #define SOFT_TIMER_FAC_RESET_HANDLER        8
@@ -61,15 +62,15 @@
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
-#define DOOR_AUTO_LOCK_DEFAULT_INTERVAL_MS  60000   //  60s
-#define DOOR_ALARM_OFF_INTERVAL_MS          200     //  200ms
 #define MOTOR_ADC_MEAS_INTERVAL_MS          10      //  10ms
 #define BATTERY_ADC_MEAS_INTERVAL_MS        60000   //  60s
-#define BATTERY_SEND_NOTIF_INTERVAL_MS      1000    // 1s
-#define FACTORY_RESET_INTERVAL_MS           2000    // 2s
+#define BATTERY_SEND_NOTIF_INTERVAL_MS      1000    //  1s
+#define FACTORY_RESET_INTERVAL_MS           2000    //  2s
 
-#define MAX_DOOR_AUTO_LOCK_IN_S             300     // 300
-#define MIN_DOOR_AUTO_LOCK_IN_S             10      // 10s
+#define MAX_DOOR_AUTO_LOCK_S                300     //  300s
+#define MIN_DOOR_AUTO_LOCK_S                60      //  60s
+#define MAX_DOOR_SENSOR_ALARM_S             300     //  300s
+#define MIN_DOOR_SENSOR_ALARM_S             30      //  30s
 /***************************************************************************************************
  * Interrupt source
  **************************************************************************************************/
