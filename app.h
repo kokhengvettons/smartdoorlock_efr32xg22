@@ -18,6 +18,7 @@
 #define APP_H_
 
 #include "gecko_configuration.h"
+#include <stdbool.h>
 
 /* DEBUG_LEVEL is used to enable/disable debug prints. Set DEBUG_LEVEL to 1 to enable debug prints */
 #define DEBUG_LEVEL 0
@@ -54,11 +55,12 @@
 #define SOFT_TIMER_DOOR_SENSOR_HANDLER      2
 #define SOFT_TIMER_DOOR_BUTTON_HANDLER      3
 #define SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER   4
-#define SOFT_TIMER_SENSOR_ALARM_HANDLER     5
-#define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   6
-#define SOFT_TIMER_BATTERY_MEAS_HANDLER     7
-#define SOFT_TIMER_FAC_RESET_HANDLER        8
-#define SOFT_TIMER_SEND_NOTIF_HANDLER       9
+#define SOFT_TIMER_DOOR_ALARM_ON_HANDLER    5
+#define SOFT_TIMER_DOOR_ALARM_OFF_HANDLER   6
+#define SOFT_TIMER_MOTOR_ADC_MEAS_HANDLER   7
+#define SOFT_TIMER_BATTERY_MEAS_HANDLER     8
+#define SOFT_TIMER_FAC_RESET_HANDLER        9
+#define SOFT_TIMER_SEND_NOTIF_HANDLER       10
 
 #define DOOR_SENSOR_INTERVAL_MS             100     //  100ms
 #define DOOR_BUTTON_DEBOUNCE_INTERVAL_MS    500     //  500ms
@@ -86,6 +88,7 @@
 typedef enum {DOOR_UNLOCK = 0, DOOR_LOCK = 1} door_lock_TypeDef;
 typedef enum {DOOR_OPEN = 1, DOOR_CLOSED = 0} door_status_TypeDef;
 typedef enum {DISABLE_AUTO_LOCK = 0x00, ENABLE_AUTO_LOCK = 0x01} enable_auto_lock_TypeDef;
+typedef enum {DOOR_SENSOR_ALARM_OFF = 0x00, DOOR_SENSOR_ALARM_ON = 0x01} door_sensor_alarm_TypeDef;
 
 /***************************************************************************************************
  * Special command
@@ -118,6 +121,7 @@ void evt_door_button_ext_signal(void);
 void evt_motor_battery_measurement(void);
 void evt_update_battery_measurement(void);
 void evt_send_notification_battery_level(void);
+void evt_send_notification_door_sensor_alarm(bool bEnableAlarm);
 void flash_keypad_configuration_profile(void);
 void factory_reset(void);
 void special_command_default_handler(void);

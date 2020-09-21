@@ -27,11 +27,12 @@ extern const struct bg_gattdb_def bg_gattdb_data;
 #define gattdb_door_status                     30
 #define gattdb_door_password                   33
 #define gattdb_door_sensor_alarm_time          36
-#define gattdb_door_auto_lock_time             38
-#define gattdb_enable_auto_door_lock           40
-#define gattdb_special_command                 42
-#define gattdb_battery_level_cell              45
-#define gattdb_battery_level_motor             48
-#define gattdb_ota_control                     52
+#define gattdb_door_sensor_alarm_status         38
+#define gattdb_door_auto_lock_time             41
+#define gattdb_enable_auto_door_lock           43
+#define gattdb_special_command                 45
+#define gattdb_battery_level_cell              48
+#define gattdb_battery_level_motor             51
+#define gattdb_ota_control                     55
 
 #endif

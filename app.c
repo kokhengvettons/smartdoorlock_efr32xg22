@@ -52,6 +52,7 @@ static uint8_t enable_auto_door_lock      = DISABLE_AUTO_LOCK;
 static uint32_t door_auto_lock_time_in_s  = MIN_DOOR_AUTO_LOCK_S;
 static uint32_t door_alarm_time_in_s      = MIN_DOOR_SENSOR_ALARM_S;
 static uint8_t battery_level[NUM_ADC_INPUT];
+static uint8_t door_sensor_alarm_status   = DOOR_SENSOR_ALARM_OFF;
 
 /* static function */
 static void bootMessage(struct gecko_msg_system_boot_evt_t *bootevt);
@@ -272,11 +273,11 @@ void appMain(const gecko_configuration_t *pconfig)
               }
             }
             break;
-          case SOFT_TIMER_SENSOR_ALARM_HANDLER:
-            if ((door_status = GPIO_PinInGet(gpioPortC, 2)) == DOOR_OPEN)
-            {
-              //TODO: turn on buzz
-            }
+          case SOFT_TIMER_DOOR_ALARM_ON_HANDLER:
+            evt_send_notification_door_sensor_alarm(true);
+            break;
+          case SOFT_TIMER_DOOR_ALARM_OFF_HANDLER:
+            evt_send_notification_door_sensor_alarm(false);
             break;
           default:
             break;
@@ -362,17 +363,52 @@ void evt_door_sensor_send_notification(void)
   {
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_status, sizeof(door_open), door_open);
 
-    // trigger door sensor alarm timer
-    gecko_cmd_hardware_set_soft_timer(32768 * door_alarm_time_in_s, SOFT_TIMER_SENSOR_ALARM_HANDLER, true);
+    // trigger door sensor alarm timer when door open
+    gecko_cmd_hardware_set_soft_timer(32768 * door_alarm_time_in_s, SOFT_TIMER_DOOR_ALARM_ON_HANDLER, true);
   }
   else
   {
     gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_status, sizeof(door_closed), door_closed);
 
-    // trigger auto door lock timer
+    // added some delay to prevent two notifications send at same time
+    gecko_cmd_hardware_set_soft_timer(32768, SOFT_TIMER_DOOR_ALARM_OFF_HANDLER, true);
+
+    // trigger auto door lock timer when door close
     if (enable_auto_door_lock == ENABLE_AUTO_LOCK)
       gecko_cmd_hardware_set_soft_timer(32768 * door_auto_lock_time_in_s, SOFT_TIMER_DOOR_AUTO_LOCK_HANDLER, true);
   }
+}
+
+/* send notification for battery level when lower than battery threshold */
+void evt_send_notification_battery_level()
+{
+  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_motor, 1, &battery_level[1]);
+}
+
+/* send notification for door sensor alarm when door open exceed time limit */
+void evt_send_notification_door_sensor_alarm(bool bEnableAlarm)
+{
+  if (bEnableAlarm == true)
+  {
+    if ((door_status = GPIO_PinInGet(gpioPortC, 2)) == DOOR_OPEN)
+    {
+      //TODO: turn on buzzer
+
+      door_sensor_alarm_status = DOOR_SENSOR_ALARM_ON;
+      gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_sensor_alarm_status, 
+                                                            1, &door_sensor_alarm_status);
+    }
+  }
+  else
+  {
+    // TODO: turn off buzzer
+    
+    door_sensor_alarm_status = DOOR_SENSOR_ALARM_OFF;
+    gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_door_sensor_alarm_status, 
+                                                      1, &door_sensor_alarm_status);
+  }
+  
+  
 }
 
 /* Send an read response to remote GATT client for door status*/
@@ -544,12 +580,6 @@ void evt_update_battery_measurement(void)
   }
 
   triggerADCScanAgain();
-}
-
-/* send notification for battery level when lower than battery threshold */
-void evt_send_notification_battery_level()
-{
-  gecko_cmd_gatt_server_send_characteristic_notification(0xFF, gattdb_battery_level_motor, 1, &battery_level[1]);
 }
 
 /* perform factory reset */
